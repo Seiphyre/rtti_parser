@@ -12,7 +12,11 @@ NAME		=	vde-rtti-parser
 
 BIN_DIR		=	./bin
 
-SRC			=	sources/main.cpp
+SRC_DIR		=	./sources
+
+OBJ_DIR		=	./objs
+
+SRC			=	main.cpp
 
 OBJ			=	$(SRC:.cpp=.o)
 
@@ -64,16 +68,16 @@ CLANG_LIBS 	= 	-lclangTooling \
 
 $(NAME):	
 	# compile
-	$(CXX) $(LLVM_CXXFLAGS) -o $(OBJ) -c $(SRC)
+	$(CXX) $(LLVM_CXXFLAGS) -o $(OBJ_DIR)/$(OBJ) -c $(SRC_DIR)/$(SRC)
 	# link
-	$(CXX) $(LLVM_LDFLAGS) -o $(BIN_DIR)/$(NAME) $(OBJ) $(CLANG_LIBS) $(LLVM_LIBS)
+	$(CXX) $(LLVM_LDFLAGS) -o $(BIN_DIR)/$(NAME) $(OBJ_DIR)/$(OBJ) $(CLANG_LIBS) $(LLVM_LIBS)
 
 
 all:		$(NAME)
 
 
 clean:
-	rm -f $(OBJ)
+	rm -f $(OBJ_DIR)/$(OBJ)
 
 
 fclean:		clean
