@@ -1,5 +1,5 @@
 #
-# clang++ `llvm-10.0.0/bin/llvm-config --cxxflags` -Lllvm-10.0.0/lib/ main.cpp -lclangTooling -lclangFrontendTool -lclangFrontend -lclangDriver -lclangSerialization -lclangCodeGen -lclangParse -lclangSema -lclangStaticAnalyzerFrontend -lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore -lclangAnalysis -lclangARCMigrate -lclangRewrite -lclangRewriteFrontend -lclangEdit -lclangAST -lclangLex -lclangBasic `llvm-10.0.0/bin/llvm-config --libs --system-libs` -o clang-tool
+# clang++ `libs/llvm10/bin/llvm-config --cxxflags` -Llibs/llvm10/lib/ sources/main.cpp -lclangTooling -lclangFrontendTool -lclangFrontend -lclangDriver -lclangSerialization -lclangCodeGen -lclangParse -lclangSema -lclangStaticAnalyzerFrontend -lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore -lclangAnalysis -lclangARCMigrate -lclangRewrite -lclangRewriteFrontend -lclangEdit -lclangAST -lclangLex -lclangBasic `libs/llvm10/bin/llvm-config --libs --system-libs` -o clang-tool
 #
 # https://bcain-llvm.readthedocs.io/projects/llvm/en/latest/CommandGuide/llvm-config/
 #
@@ -8,11 +8,11 @@
 #	Base
 #####################################################
 
-NAME		=	clang-tool
+NAME		=	vde-rtti-parser
 
 BIN_DIR		=	./bin
 
-SRC			=	main.cpp
+SRC			=	sources/main.cpp
 
 OBJ			=	$(SRC:.cpp=.o)
 
@@ -22,8 +22,8 @@ CXX			=	clang++
 #	LLVM / CLANG Config
 #####################################################
 
-LLVM_CXXFLAGS = $(shell llvm-10.0.0/bin/llvm-config --cxxflags)
-				# -I/PATH/TO/clangtool/llvm-10.0.0/include
+LLVM_CXXFLAGS = $(shell libs/llvm10/bin/llvm-config --cxxflags)
+				# -I/PATH/TO/clangtool/libs/llvm10/include
 				# -std=c++14 
 				# -fno-exceptions 
 				# -fno-rtti 
@@ -31,12 +31,12 @@ LLVM_CXXFLAGS = $(shell llvm-10.0.0/bin/llvm-config --cxxflags)
 				# -D__STDC_FORMAT_MACROS 
 				# -D__STDC_LIMIT_MACROS
 
-LLVM_LDFLAGS = $(shell llvm-10.0.0/bin/llvm-config --ldflags)
-				# -L/PATH/TO/clangtool/llvm-10.0.0/lib 
+LLVM_LDFLAGS = $(shell libs/llvm10/bin/llvm-config --ldflags)
+				# -L/PATH/TO/clangtool/libs/llvm10/lib 
 				# -Wl,-search_paths_first 
 				# -Wl,-headerpad_max_install_names
 
-LLVM_LIBS = $(shell llvm-10.0.0/bin/llvm-config --libs --system-libs)
+LLVM_LIBS = $(shell libs/llvm10/bin/llvm-config --libs --system-libs)
 
 CLANG_LIBS 	= 	-lclangTooling \
 				-lclangFrontendTool \
