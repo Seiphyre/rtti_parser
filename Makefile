@@ -26,7 +26,9 @@ CXX			=	clang++
 #	LLVM / CLANG Config
 #####################################################
 
-LLVM_CXXFLAGS = $(shell libs/llvm10/bin/llvm-config --cxxflags)
+LLVM_CXXFLAGS = -std=c++14 -I./libs/llvm10/include/ -fno-rtti
+
+#LLVM_CXXFLAGS_ALL = $(shell libs/llvm10/bin/llvm-config --cxxflags)
 				# -I/PATH/TO/clangtool/libs/llvm10/include
 				# -std=c++14 
 				# -fno-exceptions 
@@ -34,6 +36,8 @@ LLVM_CXXFLAGS = $(shell libs/llvm10/bin/llvm-config --cxxflags)
 				# -D__STDC_CONSTANT_MACROS 
 				# -D__STDC_FORMAT_MACROS 
 				# -D__STDC_LIMIT_MACROS
+
+#LLVM_CXXFLAGS := $(filter-out -fno-exceptions,$(LLVM_CXXFLAGS_ALL))
 
 LLVM_LDFLAGS = $(shell libs/llvm10/bin/llvm-config --ldflags)
 				# -L/PATH/TO/clangtool/libs/llvm10/lib 
