@@ -102,6 +102,20 @@ struct ClassInfo
     std::vector<ClassAttribute *> attributes;
 };
 
+struct HeaderInfo
+{
+    std::string name;
+    bool        isAngled;
+};
+
+struct FileInfo
+{
+    clang::FileID             main_file_id;
+    std::string               main_file_name;
+    std::vector<HeaderInfo *> headers;
+    std::vector<ClassInfo *>  classes;
+};
+
 std::vector<ClassInfo *> class_data;
 
 // -------------------------------------
@@ -155,15 +169,36 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
             class_info->file_name     = file_name;
             class_info->file_dir_path = file_dir_name;
 
+            // std::cout << decl->getQualifier()->getAsType()->isBuiltinType() << std::endl;
+
             // std::cout << " Class type: " << decl->getQualifiedNameAsString() << std::endl;
 
-            const RecordDecl::field_range fields = decl->fields();
+            const auto bases = decl->bases();
 
-            std::for_each(std::begin(fields), std::end(fields), [&class_info](const auto & f) {
+            std::for_each(std::begin(bases), std::end(bases), [&class_info, this](const auto & b) {
+                CXXBaseSpecifier base = (CXXBaseSpecifier)b;
+
+                PrintingPolicy pp(ast_context->getLangOpts());
+                std::cout << base.getType().getAsString(pp) << std::endl;
+
+                // class_info->attributes.push_back(class_attribute);
+            });
+
+            const auto fields = decl->fields();
+
+            std::for_each(std::begin(fields), std::end(fields), [&class_info, this](const auto & f) {
                 ClassAttribute * class_attribute = new ClassAttribute();
+                FieldDecl *      field           = dynamic_cast<FieldDecl *>(f);
+                TypedefType *    typedef_type    = (TypedefType *)f;
 
-                class_attribute->name = f->getNameAsString();
-                class_attribute->type = f->getQualifiedNameAsString();
+                class_attribute->name = field->getNameAsString();
+                class_attribute->type = field->getQualifiedNameAsString();
+                // std::cout << std::endl << field->getQualifiedNameAsString() << std::endl;
+                // PrintingPolicy pp(ast_context->getLangOpts());
+                // field->getType()->dump();
+                // std::cout << QualType::getAsString(field->getType().split(), pp) << std::endl;
+
+                // f->getType()->getAsCXXRecordDecl();
 
                 // std::cout << " Attribut " << attribut_name << " of type " << attribut_type << std::endl;
                 class_info->attributes.push_back(class_attribute);
@@ -196,9 +231,8 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
     // }
     // virtual bool VisitCallExpr(CallExpr * call)
     // {
-    //     rewriter.ReplaceText(call->getBeginLoc(), 7, "add5"); // call->getBeginLoc() remplace : call->getLocStart() ?
-    //     errs() << "** Rewrote function call\n";
-    //     return true;
+    //     rewriter.ReplaceText(call->getBeginLoc(), 7, "add5"); // call->getBeginLoc() remplace :
+    //     call->getLocStart() ? errs() << "** Rewrote function call\n"; return true;
     // }
 };
 
@@ -239,26 +273,29 @@ class MyASTConsumer : public ASTConsumer
 
 // -------------------------------------
 
+// cf clang-tidy check (sorting header): https://clang.llvm.org/extra/doxygen/IncludeOrderCheck_8cpp_source.html
 class MyPPCallbacks : public PPCallbacks
 {
+    SourceManager * m_source_manager;
+
   public:
+    explicit MyPPCallbacks(CompilerInstance * compiler_instance)
+    {
+        m_source_manager = &(compiler_instance->getSourceManager());
+    }
+
     virtual void InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName, bool IsAngled,
                                     CharSourceRange FilenameRange, const FileEntry * File, StringRef SearchPath,
                                     StringRef RelativePath, const clang::Module * Imported,
                                     SrcMgr::CharacteristicKind FileType)
     {
-        std::cout << "-- BEGIN -- " << std::endl;
-
-        std::cout << "FileName: " << FileName.str() << std::endl;
-
-        std::cout << "-- END -- " << std::endl;
-        // astContext->getSourceManager().isInMainFile(func->getLocStart())
-    }
-
-    virtual void FileChanged(SourceLocation Loc, FileChangeReason Reason, SrcMgr::CharacteristicKind FileType,
-                             FileID PrevFID = FileID())
-    {
-        // std::cout << "-- BEGIN -- " << std::endl;
+        if (m_source_manager->getFileID(HashLoc) == m_source_manager->getMainFileID())
+        {
+            // if (IsAngled)
+            //     std::cout << "<" << FileName.str() << ">" << std::endl;
+            // else
+            //     std::cout << "\"" << FileName.str() << "\"" << std::endl;
+        }
     }
 };
 
@@ -271,7 +308,8 @@ class MyFrontendAction : public ASTFrontendAction
     {
         // CI.getPreprocessor().SetSuppressIncludeNotFoundError(true); // remove include errors
         // CI.getDiagnostics().setClient(new IgnoringDiagConsumer()); // remove diagnostic
-        // CI.getPreprocessor().addPPCallbacks(make_unique<MyPPCallbacks>()); // processor callbacks: includes, pragma,
+        CI.getPreprocessor().addPPCallbacks(make_unique<MyPPCallbacks>(&CI)); // processor callbacks: includes,
+        // pragma,
         // ...
 
         return make_unique<MyASTConsumer>(&CI); // pass CI pointer to ASTConsumer
@@ -349,6 +387,14 @@ int main(int argc, const char ** argv)
     // create a new Clang Tool instance (a LibTooling environment)
     ClangTool Tool(op.getCompilations(), op.getSourcePathList());
 
+    std::string clang_path   = "-I./libs/llvm10/lib/clang/10.0.0/include/";
+    std::string libcpp_path1 = "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/";
+    std::string libcpp_path2 = "-I/Library/Developer/CommandLineTools/usr/include/c++/v1/";
+
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(clang_path.c_str(), ArgumentInsertPosition::BEGIN));
+    // order matters. Error might append otherwise (cmath.h)
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(libcpp_path1.c_str(), ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(libcpp_path2.c_str(), ArgumentInsertPosition::BEGIN));
     // force c++ (So that .h are not considered as C header)
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
 
@@ -358,7 +404,8 @@ int main(int argc, const char ** argv)
     // run the Clang Tool, creating a new FrontendAction (explained below)
     int result = Tool.run(newFrontendActionFactory<MyFrontendAction>().get());
 
-    llvm::errs() << "\n";
+    if (result != 0)
+        llvm::errs() << "\n";
 
     // std::cout << " Class trouvé: " << class_data.size() << std::endl;
 
@@ -383,7 +430,7 @@ int main(int argc, const char ** argv)
                 generated_file_path += "/";
         }
 
-        std::cout << generated_file_path << std::endl;
+        // std::cout << generated_file_path << std::endl;
 
         // Find generated file name -------------------------
         std::string generated_file_name = class_data[i]->file_name;
@@ -396,12 +443,12 @@ int main(int argc, const char ** argv)
 
         generated_file_name += ".generated.hpp";
 
-        std::cout << generated_file_name << std::endl;
+        // std::cout << generated_file_name << std::endl;
 
         // Create the generated file content -----------------
         std::string generated_content = CreateFileContent(class_data[i]);
 
-        std::cout << generated_content << std::endl;
+        // std::cout << generated_content << std::endl;
 
         // Create / Open generated file ----------------------
         std::ofstream myfile;
@@ -409,6 +456,8 @@ int main(int argc, const char ** argv)
         myfile.open(generated_file_path + generated_file_name, std::ofstream::out | std::ofstream::trunc);
         myfile << generated_content;
         myfile.close();
+
+        std::cout << "file generated at " << (generated_file_path + generated_file_name) << std::endl;
     }
 
     return result;
