@@ -19,6 +19,9 @@
 #include <vector>
 //#include <stdexcept>
 
+#include "InfoStructs.h"
+#include "Utils.hpp"
+
 using namespace std;
 using namespace clang;
 using namespace clang::driver; // useless ?
@@ -33,7 +36,9 @@ static cl::extrahelp      CommonHelp(CommonOptionsParser::HelpMessage);
 // static cl::opt<bool> YourOwnOption(...);
 
 // Rewriter rewriter;
-// int      numFunctions = 0;
+
+int                     data_index = 0;
+std::map<int, FileInfo> g_data;
 
 // 1: INCLUDE_GUARD_NAME
 // 2: INCLUDE_GUARD_NAME
@@ -69,55 +74,6 @@ inline auto registerMembers< %s >()
 // 2: MEMBER_NAME
 const std::string MemberTemplate = R"(member("%s", &%s))";
 
-// --------------------------------------
-// https://stackoverflow.com/questions/2342162/stdstring-formatting-like-sprintf
-
-template <typename... Args> std::string string_format(const std::string & format, Args... args)
-{
-    size_t size = snprintf(nullptr, 0, format.c_str(), args...) + 1; // Extra space for '\0'
-
-    if (size <= 0)
-    {
-        std::cout << "[Warning] [string_format] Error while formatting." << std::endl;
-        // throw std::runtime_error("Error during formatting.");
-    }
-
-    std::unique_ptr<char[]> buf(new char[size]);
-    snprintf(buf.get(), size, format.c_str(), args...);
-
-    return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
-}
-
-struct ClassAttribute
-{
-    std::string name;
-    std::string type;
-};
-
-struct ClassInfo
-{
-    std::string                   file_name;
-    std::string                   file_dir_path;
-    std::string                   type;
-    std::vector<ClassAttribute *> attributes;
-};
-
-struct HeaderInfo
-{
-    std::string name;
-    bool        isAngled;
-};
-
-struct FileInfo
-{
-    clang::FileID             main_file_id;
-    std::string               main_file_name;
-    std::vector<HeaderInfo *> headers;
-    std::vector<ClassInfo *>  classes;
-};
-
-std::vector<ClassInfo *> class_data;
-
 // -------------------------------------
 
 class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
@@ -140,34 +96,13 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
     {
         if (source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
         {
-            FullSourceLoc full_location = ast_context->getFullLoc(decl->getBeginLoc());
-
-            // filename ----------------------------
-            std::string file_name = full_location.getFileEntry()->getName().str();
-
-            const size_t last_slash_idx = file_name.find_last_of("\\/");
-            if (std::string::npos != last_slash_idx)
-            {
-                file_name.erase(0, last_slash_idx + 1);
-            }
-            // std::cout << file_name << std::endl;
-            // end filename
-
-            // directory -------------------------
-            std::string file_dir_name = full_location.getFileEntry()->getDir()->getName().str();
-
-            if (file_dir_name.back() != '/')
-                file_dir_name += "/";
-
-            // std::cout << file_dir_name << std::endl;
-            // end directory
+            // FullSourceLoc full_location = ast_context->getFullLoc(decl->getBeginLoc());
+            // FileID file_id = full_location.getFileID();
 
             // class infos -------------------------
             ClassInfo * class_info = new ClassInfo();
 
-            class_info->type          = decl->getQualifiedNameAsString();
-            class_info->file_name     = file_name;
-            class_info->file_dir_path = file_dir_name;
+            class_info->type = decl->getQualifiedNameAsString();
 
             // std::cout << decl->getQualifier()->getAsType()->isBuiltinType() << std::endl;
 
@@ -179,9 +114,11 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
                 CXXBaseSpecifier base = (CXXBaseSpecifier)b;
 
                 PrintingPolicy pp(ast_context->getLangOpts());
-                std::cout << base.getType().getAsString(pp) << std::endl;
+                std::string    base_type = base.getType().getAsString(pp);
 
-                // class_info->attributes.push_back(class_attribute);
+                // std::cout << base.getType().getAsString(pp) << std::endl;
+
+                class_info->bases_type.push_back(base_type);
             });
 
             const auto fields = decl->fields();
@@ -191,8 +128,8 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
                 FieldDecl *      field           = dynamic_cast<FieldDecl *>(f);
                 TypedefType *    typedef_type    = (TypedefType *)f;
 
-                class_attribute->name = field->getNameAsString();
-                class_attribute->type = field->getQualifiedNameAsString();
+                class_attribute->name      = field->getNameAsString();
+                class_attribute->full_name = field->getQualifiedNameAsString();
                 // std::cout << std::endl << field->getQualifiedNameAsString() << std::endl;
                 // PrintingPolicy pp(ast_context->getLangOpts());
                 // field->getType()->dump();
@@ -204,7 +141,8 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
                 class_info->attributes.push_back(class_attribute);
             });
 
-            class_data.push_back(class_info);
+            g_data[data_index].classes.push_back(class_info);
+            // class_data.push_back(class_info);
         }
 
         return true;
@@ -261,13 +199,9 @@ class MyASTConsumer : public ASTConsumer
     //     return true;
     // }
 
-    // this replaces "HandleTopLevelDecl"
-    // override this to call our ExampleVisitor on the entire source file
-    virtual void HandleTranslationUnit(ASTContext & Context)
+    virtual void HandleTranslationUnit(ASTContext & ast_context)
     {
-        /* we can use ASTContext to get the TranslationUnitDecl, which is
-       a single Decl that collectively represents the entire source file */
-        visitor->TraverseDecl(Context.getTranslationUnitDecl());
+        visitor->TraverseDecl(ast_context.getTranslationUnitDecl());
     }
 };
 
@@ -291,6 +225,13 @@ class MyPPCallbacks : public PPCallbacks
     {
         if (m_source_manager->getFileID(HashLoc) == m_source_manager->getMainFileID())
         {
+            HeaderInfo * header_info = new HeaderInfo();
+
+            header_info->name     = FileName.str();
+            header_info->isAngled = IsAngled;
+
+            g_data[data_index].headers.push_back(header_info);
+
             // if (IsAngled)
             //     std::cout << "<" << FileName.str() << ">" << std::endl;
             // else
@@ -306,13 +247,31 @@ class MyFrontendAction : public ASTFrontendAction
   public:
     virtual std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance & CI, StringRef file)
     {
-        // CI.getPreprocessor().SetSuppressIncludeNotFoundError(true); // remove include errors
-        // CI.getDiagnostics().setClient(new IgnoringDiagConsumer()); // remove diagnostic
-        CI.getPreprocessor().addPPCallbacks(make_unique<MyPPCallbacks>(&CI)); // processor callbacks: includes,
-        // pragma,
-        // ...
+        // processor callbacks: includes, pragma, ...
+        CI.getPreprocessor().addPPCallbacks(make_unique<MyPPCallbacks>(&CI));
+
+        // add file to data
+        // FileID main_file_id  = CI.getSourceManager().getMainFileID();
+        g_data[data_index] = FileInfo();
+
+        std::string main_file_name;
+        std::string main_file_dir_path;
+
+        split_path(file.str(), main_file_dir_path, main_file_name);
+
+        g_data[data_index].main_file_name     = main_file_name;
+        g_data[data_index].main_file_dir_path = main_file_dir_path;
+
+        // std::cout << "file_id: " << g_data[main_file_id].main_file_id.getHashValue() << std::endl;
+        // std::cout << "file_name: " << g_data[main_file_id].main_file_name << std::endl;
+        // std::cout << "file_dir: " << g_data[main_file_id].main_file_dir_path << std::endl;
 
         return make_unique<MyASTConsumer>(&CI); // pass CI pointer to ASTConsumer
+    }
+
+    virtual void EndSourceFileAction()
+    {
+        data_index++;
     }
 };
 
@@ -345,34 +304,38 @@ std::string CreateIncludeGuardName(std::string class_type)
     return out;
 }
 
-std::string CreateFileContent(ClassInfo * class_info)
+std::string CreateFileContent(const FileInfo & file_info)
 {
-    std::string out;
+    std::string out = "";
 
-    std::string class_type = class_info->type;
-    // std::cout << " Class type: " << class_type << std::endl;
-
-    std::string member_final = "";
-
-    for (int j = 0; j < class_info->attributes.size(); j++)
+    for (auto class_info = file_info.classes.begin(); class_info != file_info.classes.end(); class_info++)
     {
-        std::string name = class_info->attributes[j]->name;
-        std::string type = class_info->attributes[j]->type;
+        std::string class_type = (*class_info)->type;
+        // std::cout << " Class type: " << class_type << std::endl;
 
-        // std::cout << " Attribut " << name << " of type " << type << std::endl;
+        std::string member_final = "";
 
-        member_final += "        ";
-        member_final += string_format(MemberTemplate, name.c_str(), type.c_str());
+        for (int j = 0; j < (*class_info)->attributes.size(); j++)
+        {
+            std::string name = (*class_info)->attributes[j]->name;
+            std::string type = (*class_info)->attributes[j]->full_name;
 
-        if (j + 1 < class_info->attributes.size())
-            member_final += "\n";
+            // std::cout << " Attribut " << name << " of type " << type << std::endl;
+
+            member_final += "        ";
+            member_final += string_format(MemberTemplate, name.c_str(), type.c_str());
+
+            if (j + 1 < (*class_info)->attributes.size())
+                member_final += "\n";
+        }
+
+        std::string register_member_final =
+            string_format(SpecializationTemplate, class_type.c_str(), member_final.c_str());
+        std::string include_guard_name = CreateIncludeGuardName(class_type);
+
+        out = string_format(FileTemplate, include_guard_name.c_str(), include_guard_name.c_str(),
+                            register_member_final.c_str());
     }
-
-    std::string register_member_final = string_format(SpecializationTemplate, class_type.c_str(), member_final.c_str());
-    std::string include_guard_name    = CreateIncludeGuardName(class_type);
-
-    out = string_format(FileTemplate, include_guard_name.c_str(), include_guard_name.c_str(),
-                        register_member_final.c_str());
 
     return out;
 }
@@ -414,15 +377,17 @@ int main(int argc, const char ** argv)
     //     std::cout << f << std::endl;
     // }
 
-    for (int i = 0; i < class_data.size(); i++)
+    for (auto file_info = g_data.begin(); file_info != g_data.end(); file_info++)
     {
+        // file_info->second.dump();
+
         // Find generated file path -------------------------
         std::string generated_file_path = GenInclPath.getValue();
 
         if (generated_file_path.empty())
         {
             // std::cout << "empty file path" << std::endl;
-            generated_file_path = class_data[i]->file_dir_path;
+            generated_file_path = file_info->second.main_file_dir_path;
         }
         else
         {
@@ -433,7 +398,7 @@ int main(int argc, const char ** argv)
         // std::cout << generated_file_path << std::endl;
 
         // Find generated file name -------------------------
-        std::string generated_file_name = class_data[i]->file_name;
+        std::string generated_file_name = file_info->second.main_file_name;
 
         const size_t period_idx = generated_file_name.rfind('.');
         if (std::string::npos != period_idx)
@@ -446,7 +411,7 @@ int main(int argc, const char ** argv)
         // std::cout << generated_file_name << std::endl;
 
         // Create the generated file content -----------------
-        std::string generated_content = CreateFileContent(class_data[i]);
+        std::string generated_content = CreateFileContent(file_info->second);
 
         // std::cout << generated_content << std::endl;
 

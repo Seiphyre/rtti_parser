@@ -26,7 +26,7 @@ CXX			=	clang++
 #	LLVM / CLANG Config
 #####################################################
 
-LLVM_CXXFLAGS = -std=c++14 -I./libs/llvm10/include/ -fno-rtti
+LLVM_CXXFLAGS = -std=c++14 -Iheaders/ -I./libs/llvm10/include/ -fno-rtti
 
 #LLVM_CXXFLAGS_ALL = $(shell libs/llvm10/bin/llvm-config --cxxflags)
 				# -I/PATH/TO/clangtool/libs/llvm10/include
