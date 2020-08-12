@@ -14,13 +14,13 @@
 
 #include <iostream>
 #include <fstream>
-#include <memory>
 #include <string>
 #include <vector>
-//#include <stdexcept>
 
-#include "InfoStructs.h"
-#include "Utils.hpp"
+#include "info_structs.h"
+#include "utils_functions.hpp"
+#include "string_templates.hpp"
+#include "VDEReflGenASTFrontendAction.h"
 
 using namespace std;
 using namespace clang;
@@ -35,245 +35,9 @@ static cl::extrahelp      CommonHelp(CommonOptionsParser::HelpMessage);
 // static cl::extrahelp      MoreHelp("\nMore help text...\n");
 // static cl::opt<bool> YourOwnOption(...);
 
-// Rewriter rewriter;
-
 int                     data_index = 0;
 std::map<int, FileInfo> g_data;
-
-// 1: INCLUDE_GUARD_NAME
-// 2: INCLUDE_GUARD_NAME
-// 3: SPECIALISATION_TEMPLATE
-const std::string FileTemplate =
-    R"(#ifndef %s
-#define %s
-
-#include <Meta.h>
-
-namespace meta 
-{
-
-%s
-
-} // end namespace
-
-#endif
-)";
-
-// 1: TYPE
-// 2: MEMBER_TEMPLATE
-const std::string SpecializationTemplate =
-    R"(template <>
-inline auto registerMembers< %s >() 
-{
-    return members( 
-%s 
-    );
-})";
-
-// 1: SHORT_MEMBER_NAME
-// 2: MEMBER_NAME
-const std::string MemberTemplate = R"(member("%s", &%s))";
-
-// -------------------------------------
-
-class MyVisitor : public RecursiveASTVisitor<MyVisitor> // << template nouveau ?
-{
-  private:
-    ASTContext *    ast_context; // used for getting additional AST info
-    SourceManager * source_manager;
-
-  public:
-    explicit MyVisitor(
-        CompilerInstance * compiler_instance) //: astContext(&(CI->getASTContext())) // initialize private members
-    {
-        ast_context    = &(compiler_instance->getASTContext());
-        source_manager = &(compiler_instance->getSourceManager());
-
-        // rewriter.setSourceMgr(astContext->getSourceManager(), astContext->getLangOpts());
-    }
-
-    bool VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
-    {
-        if (source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
-        {
-            // FullSourceLoc full_location = ast_context->getFullLoc(decl->getBeginLoc());
-            // FileID file_id = full_location.getFileID();
-
-            // class infos -------------------------
-            ClassInfo * class_info = new ClassInfo();
-
-            class_info->type = decl->getQualifiedNameAsString();
-
-            // std::cout << decl->getQualifier()->getAsType()->isBuiltinType() << std::endl;
-
-            // std::cout << " Class type: " << decl->getQualifiedNameAsString() << std::endl;
-
-            const auto bases = decl->bases();
-
-            std::for_each(std::begin(bases), std::end(bases), [&class_info, this](const auto & b) {
-                CXXBaseSpecifier base = (CXXBaseSpecifier)b;
-
-                PrintingPolicy pp(ast_context->getLangOpts());
-                std::string    base_type = base.getType().getAsString(pp);
-
-                // std::cout << base.getType().getAsString(pp) << std::endl;
-
-                class_info->bases_type.push_back(base_type);
-            });
-
-            const auto fields = decl->fields();
-
-            std::for_each(std::begin(fields), std::end(fields), [&class_info, this](const auto & f) {
-                ClassAttribute * class_attribute = new ClassAttribute();
-                FieldDecl *      field           = dynamic_cast<FieldDecl *>(f);
-                TypedefType *    typedef_type    = (TypedefType *)f;
-
-                class_attribute->name      = field->getNameAsString();
-                class_attribute->full_name = field->getQualifiedNameAsString();
-                // std::cout << std::endl << field->getQualifiedNameAsString() << std::endl;
-                // PrintingPolicy pp(ast_context->getLangOpts());
-                // field->getType()->dump();
-                // std::cout << QualType::getAsString(field->getType().split(), pp) << std::endl;
-
-                // f->getType()->getAsCXXRecordDecl();
-
-                // std::cout << " Attribut " << attribut_name << " of type " << attribut_type << std::endl;
-                class_info->attributes.push_back(class_attribute);
-            });
-
-            g_data[data_index].classes.push_back(class_info);
-            // class_data.push_back(class_info);
-        }
-
-        return true;
-    }
-
-    // virtual bool VisitFunctionDecl(FunctionDecl * func)
-    // {
-    //     numFunctions++;
-    //     string funcName = func->getNameInfo().getName().getAsString();
-    //     if (funcName == "do_math")
-    //     {
-    //         rewriter.ReplaceText(func->getLocation(), funcName.length(), "add5");
-    //         errs() << "** Rewrote function def: " << funcName << "\n";
-    //     }
-    //     return true;
-    // }
-
-    // // this replaces the VisitStmt function above
-    // virtual bool VisitReturnStmt(ReturnStmt * ret)
-    // {
-    //     rewriter.ReplaceText(ret->getBeginLoc(), 6, "val");
-    //     errs() << "** Rewrote ReturnStmt\n";
-    //     return true;
-    // }
-    // virtual bool VisitCallExpr(CallExpr * call)
-    // {
-    //     rewriter.ReplaceText(call->getBeginLoc(), 7, "add5"); // call->getBeginLoc() remplace :
-    //     call->getLocStart() ? errs() << "** Rewrote function call\n"; return true;
-    // }
-};
-
-// -------------------------------------
-
-class MyASTConsumer : public ASTConsumer
-{
-  private:
-    MyVisitor * visitor; // doesn't have to be private
-
-  public:
-    // override the constructor in order to pass CI
-    explicit MyASTConsumer(CompilerInstance * CI) : visitor(new MyVisitor(CI)) // initialize the visitor
-    {
-    }
-
-    // // override this to call our ExampleVisitor on each top-level Decl
-    // virtual bool HandleTopLevelDecl(DeclGroupRef DG)
-    // {
-    //     // a DeclGroupRef may have multiple Decls, so we iterate through each one
-    //     for (DeclGroupRef::iterator i = DG.begin(), e = DG.end(); i != e; i++)
-    //     {
-    //         Decl *D = *i;
-    //         visitor->TraverseDecl(D); // recursively visit each AST node in Decl "D"
-    //     }
-    //     return true;
-    // }
-
-    virtual void HandleTranslationUnit(ASTContext & ast_context)
-    {
-        visitor->TraverseDecl(ast_context.getTranslationUnitDecl());
-    }
-};
-
-// -------------------------------------
-
-// cf clang-tidy check (sorting header): https://clang.llvm.org/extra/doxygen/IncludeOrderCheck_8cpp_source.html
-class MyPPCallbacks : public PPCallbacks
-{
-    SourceManager * m_source_manager;
-
-  public:
-    explicit MyPPCallbacks(CompilerInstance * compiler_instance)
-    {
-        m_source_manager = &(compiler_instance->getSourceManager());
-    }
-
-    virtual void InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName, bool IsAngled,
-                                    CharSourceRange FilenameRange, const FileEntry * File, StringRef SearchPath,
-                                    StringRef RelativePath, const clang::Module * Imported,
-                                    SrcMgr::CharacteristicKind FileType)
-    {
-        if (m_source_manager->getFileID(HashLoc) == m_source_manager->getMainFileID())
-        {
-            HeaderInfo * header_info = new HeaderInfo();
-
-            header_info->name     = FileName.str();
-            header_info->isAngled = IsAngled;
-
-            g_data[data_index].headers.push_back(header_info);
-
-            // if (IsAngled)
-            //     std::cout << "<" << FileName.str() << ">" << std::endl;
-            // else
-            //     std::cout << "\"" << FileName.str() << "\"" << std::endl;
-        }
-    }
-};
-
-// -------------------------------------
-
-class MyFrontendAction : public ASTFrontendAction
-{
-  public:
-    virtual std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance & CI, StringRef file)
-    {
-        // processor callbacks: includes, pragma, ...
-        CI.getPreprocessor().addPPCallbacks(make_unique<MyPPCallbacks>(&CI));
-
-        // add file to data
-        // FileID main_file_id  = CI.getSourceManager().getMainFileID();
-        g_data[data_index] = FileInfo();
-
-        std::string main_file_name;
-        std::string main_file_dir_path;
-
-        split_path(file.str(), main_file_dir_path, main_file_name);
-
-        g_data[data_index].main_file_name     = main_file_name;
-        g_data[data_index].main_file_dir_path = main_file_dir_path;
-
-        // std::cout << "file_id: " << g_data[main_file_id].main_file_id.getHashValue() << std::endl;
-        // std::cout << "file_name: " << g_data[main_file_id].main_file_name << std::endl;
-        // std::cout << "file_dir: " << g_data[main_file_id].main_file_dir_path << std::endl;
-
-        return make_unique<MyASTConsumer>(&CI); // pass CI pointer to ASTConsumer
-    }
-
-    virtual void EndSourceFileAction()
-    {
-        data_index++;
-    }
-};
+// Rewriter rewriter;
 
 // -------------------------------------
 
@@ -330,7 +94,7 @@ std::string CreateFileContent(const FileInfo & file_info)
         }
 
         std::string register_member_final =
-            string_format(SpecializationTemplate, class_type.c_str(), member_final.c_str());
+            string_format(RegisterMemberTemplate, class_type.c_str(), member_final.c_str());
         std::string include_guard_name = CreateIncludeGuardName(class_type);
 
         out = string_format(FileTemplate, include_guard_name.c_str(), include_guard_name.c_str(),

@@ -10,15 +10,13 @@
 
 NAME		=	vde-rtti-parser
 
-BIN_DIR		=	./bin
+BIN_DIR		=	./bin/
+SRC_DIR		=	./sources/
+OBJ_DIR		=	./objs/
 
-SRC_DIR		=	./sources
-
-OBJ_DIR		=	./objs
-
-SRC			=	main.cpp
-
-OBJ			=	$(SRC:.cpp=.o)
+SRCS		=	$(wildcard $(SRC_DIR)*.cpp)
+OBJS 		= 	$(SRCS:$(SRC_DIR)%.cpp=$(OBJ_DIR)%.o)
+BIN			=	$(BIN_DIR)$(NAME)
 
 CXX			=	clang++
 
@@ -70,22 +68,26 @@ CLANG_LIBS 	= 	-lclangTooling \
 #	Targets
 #####################################################
 
-$(NAME):	
-	# compile
-	$(CXX) $(LLVM_CXXFLAGS) -o $(OBJ_DIR)/$(OBJ) -c $(SRC_DIR)/$(SRC)
-	# link
-	$(CXX) $(LLVM_LDFLAGS) -o $(BIN_DIR)/$(NAME) $(OBJ_DIR)/$(OBJ) $(CLANG_LIBS) $(LLVM_LIBS)
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+	@echo "[COMPILING] $<"
+	@mkdir -p $(OBJ_DIR)
+	@$(CXX) -c $(LLVM_CXXFLAGS) $< -o $@
+
+$(NAME): $(OBJS)
+	@echo "[ LINKING ] $(NAME)"
+	@mkdir -p $(BIN_DIR)
+	@$(CXX) $(LLVM_LDFLAGS) -o $(BIN) $^ $(CLANG_LIBS) $(LLVM_LIBS)
 
 
-all:		$(NAME)
+all: $(NAME)
 
 
 clean:
-	rm -f $(OBJ_DIR)/$(OBJ)
+	rm -f $(OBJS)
 
 
 fclean:		clean
-	rm -f $(BIN_DIR)/$(NAME)
+	rm -f $(BIN)
 
 
 re:		fclean all
