@@ -11,6 +11,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 //#include "clang/Tooling/CommonOptionsParser.h"
 //#include "clang/Tooling/Tooling.h"
+//#include "clang/Rewrite/Core/Rewriter.h"
 
 #include "VDEReflGenPPCallbacks.h"
 #include "VDEReflGenASTConsumer.h"

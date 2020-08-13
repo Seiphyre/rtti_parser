@@ -1,51 +1,82 @@
-// https://eli.thegreenplace.net/2014/05/21/compilation-databases-for-clang-based-tools
+//**********************************************************************************************************//
+//
+// Some useful info & links:
+//
+// o About database && clang compilation:
+//      https://eli.thegreenplace.net/2014/05/21/compilation-databases-for-clang-based-tools
+//
+// o About command line options:
+//      "--extra-args", "--extra-args-before" and "-p" are added by CommonOptionParser constructor.
+//      https://stackoverflow.com/questions/34147464/how-to-avoid-llvms-support-commandline-leaking-library-arguments
+//      https://stackoverflow.com/questions/56437013/how-to-overwrite-clang-libtooling-version-option-to-display-the-version-of-my-p
+//      https://code.woboq.org/llvm/clang/lib/Tooling/CommonOptionsParser.cpp.html
+//
+//**********************************************************************************************************//
 
-#include "clang/Driver/Options.h"
-#include "clang/AST/AST.h"
-#include "clang/AST/ASTContext.h"
-#include "clang/AST/ASTConsumer.h"
-#include "clang/AST/RecursiveASTVisitor.h"
-#include "clang/Frontend/ASTConsumers.h"
-#include "clang/Frontend/FrontendActions.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Tooling/CommonOptionsParser.h"
-#include "clang/Tooling/Tooling.h"
-//#include "clang/Rewrite/Core/Rewriter.h"
-
+// C++ Standard Lib
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
 
+// Clang Libtooling Lib
+#include "clang/Tooling/CommonOptionsParser.h"
+#include "clang/Tooling/Tooling.h"
+
+// VDE_reflection_gen headers
 #include "info_structs.h"
+
 #include "utils_functions.hpp"
-#include "string_templates.hpp"
-#include "VDEReflGenASTFrontendAction.h"
 #include "file_gen_functions.h"
 
-using namespace std;
-using namespace clang;
-using namespace clang::driver; // useless ?
+#include "VDEReflGenASTFrontendAction.h"
+
+// -------------------------------------
+
 using namespace clang::tooling;
 using namespace llvm;
-
-static cl::OptionCategory MyToolCategory("Custom options");
-static cl::opt<string>    GenInclPath("gen-incl-path", cl::cat(MyToolCategory),
-                                   cl::desc("Path to generated include directory."), cl::value_desc("string"));
-static cl::extrahelp      CommonHelp(CommonOptionsParser::HelpMessage);
-// static cl::extrahelp      MoreHelp("\nMore help text...\n");
-// static cl::opt<bool> YourOwnOption(...);
 
 int                     data_index = 0;
 std::map<int, FileInfo> g_data;
 // Rewriter rewriter;
 
-// -------------------------------------
+// static cl::OptionCategory   MyToolCategory("Custom options");
+// static cl::extrahelp        CommonHelp(CommonOptionsParser::HelpMessage);
+// static cl::extrahelp        MoreHelp("\nMore help text...\n");
 
 int main(int argc, const char ** argv)
 {
+    // https://stackoverflow.com/questions/34147464/how-to-avoid-llvms-support-commandline-leaking-library-arguments
+
+    // StringMap<cl::Option *> Map;
+    // Map = cl::getRegisteredOptions();
+
+    // for (StringMap<cl::Option *>::iterator it = Map.begin(); it != Map.end(); it++)
+    // {
+    //     std::cout << it->first().str() << std::endl;
+    // }
+
+    // Hide an option we don't want to see
+    // assert(Map.count("-extra-arg") > 0);
+    // Map["-extra-arg"]->setHiddenFlag(cl::Hidden);
+    // assert(Map.count("-extra-arg-before") > 0);
+    // Map["-extra-arg-before"]->setHiddenFlag(cl::Hidden);
+    // assert(Map.count("p") > 0);
+    // Map["p"]->setHiddenFlag(cl::Hidden);
+
+    // Change --version to --show-version
+    // assert(Map.count("version") > 0);
+    // Map["version"]->setArgStr("show-version");
+
+    // // Change --help description
+    // assert(Map.count("help-list") > 0);
+    // Map["help-list"]->setDescription(
+    //     "Display list of available options without categories (--help-list-hidden for more)");
+
+    cl::opt<std::string> GenInclPath("gen-incl-path", cl::cat(cl::GeneralCategory),
+                                     cl::desc("Path to generated include directory."), cl::value_desc("string"));
+
     // parse the command-line args passed to your code
-    CommonOptionsParser op(argc, argv, MyToolCategory);
+    CommonOptionsParser op(argc, argv, cl::GeneralCategory);
 
     // create a new Clang Tool instance (a LibTooling environment)
     ClangTool Tool(op.getCompilations(), op.getSourcePathList());
