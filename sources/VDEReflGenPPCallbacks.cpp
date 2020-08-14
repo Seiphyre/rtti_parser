@@ -14,12 +14,12 @@ void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & Inc
 {
     if (m_source_manager->getFileID(HashLoc) == m_source_manager->getMainFileID())
     {
-        HeaderInfo * header_info = new HeaderInfo();
+        IncludeInfo * header_info = new IncludeInfo();
 
         header_info->name     = FileName.str();
         header_info->isAngled = IsAngled;
 
-        g_data[data_index].headers.push_back(header_info);
+        g_data[data_index].includes.push_back(header_info);
 
         // if (IsAngled)
         //     std::cout << "<" << FileName.str() << ">" << std::endl;

@@ -21,7 +21,7 @@ struct ClassInfo
     std::vector<std::string>      bases_type;
 };
 
-struct HeaderInfo
+struct IncludeInfo
 {
     std::string name;
     bool        isAngled;
@@ -29,24 +29,35 @@ struct HeaderInfo
 
 struct FileInfo
 {
-    std::string main_file_name;
-    std::string main_file_dir_path;
+    std::string file_name_without_ext;
+    std::string file_dir_path;
+    std::string file_ext;
 
-    std::vector<HeaderInfo *> headers;
-    std::vector<ClassInfo *>  classes;
+    std::vector<IncludeInfo *> includes;
+    std::vector<ClassInfo *>   classes;
 
-    void dump()
+    std::string get_file_name() const
     {
-        std::cout << "FILE DIR:  " << main_file_dir_path << std::endl;
-        std::cout << "FILE NAME: " << main_file_name << std::endl;
+        return (file_name_without_ext + file_ext);
+    }
+
+    std::string get_file_path() const
+    {
+        return (file_dir_path + file_name_without_ext + file_ext);
+    }
+
+    void dump() const
+    {
+        std::cout << "FILE DIR:  " << file_dir_path << std::endl;
+        std::cout << "FILE NAME: " << get_file_name() << std::endl;
 
         std::cout << "HEADERS:   " << std::endl;
-        for (int i = 0; i < headers.size(); i++)
+        for (int i = 0; i < includes.size(); i++)
         {
-            if (headers[i]->isAngled)
-                std::cout << "    <" << headers[i]->name << ">" << std::endl;
+            if (includes[i]->isAngled)
+                std::cout << "    <" << includes[i]->name << ">" << std::endl;
             else
-                std::cout << "    \"" << headers[i]->name << "\"" << std::endl;
+                std::cout << "    \"" << includes[i]->name << "\"" << std::endl;
         }
 
         std::cout << "CLASSES:   " << std::endl;
