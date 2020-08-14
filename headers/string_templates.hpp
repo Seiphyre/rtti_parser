@@ -5,12 +5,13 @@
 
 // 1: INCLUDE_GUARD_NAME
 // 2: INCLUDE_GUARD_NAME
-// 3: SPECIALISATION_TEMPLATE
+// 3: INCLUDES
+// 4: SPECIALISATION_TEMPLATE
 const std::string FileTemplate =
     R"(#ifndef %s
 #define %s
 
-#include <Meta.h>
+%s
 
 namespace meta 
 {
@@ -35,6 +36,12 @@ inline auto registerMembers< %s >()
 
 // 1: SHORT_MEMBER_NAME
 // 2: MEMBER_NAME
-const std::string MemberTemplate = R"(member("%s", &%s))";
+const std::string MembersTemplate = R"(member("%s", &%s))";
+
+// 1: INCLUDE_NAME
+const std::string IncludeTemplate = R"(#include "%s")";
+
+// 1: INCLUDE_NAME
+const std::string AngledIncludeTemplate = R"(#include <%s>)";
 
 #endif /* STRING_TEMPLATES_HPP_ */
