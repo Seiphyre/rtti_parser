@@ -39,9 +39,6 @@ int                     data_index = 0;
 std::map<int, FileInfo> g_data;
 // Rewriter rewriter;
 
-static cl::opt<std::string> GenInclPath("gen-incl-path", cl::cat(cl::GeneralCategory),
-                                        cl::desc("Path to generated include directory."), cl::value_desc("string"));
-
 void setup_tool(ClangTool & tool)
 {
     std::string clang_path   = "-I./libs/llvm10/lib/clang/10.0.0/include/";
@@ -65,30 +62,13 @@ void setup_tool(ClangTool & tool)
 
 void generate_file(const FileInfo & file_info)
 {
-    // Find generated file path -------------------------
-    std::string generated_file_path = GenInclPath.getValue();
-
-    if (generated_file_path.empty())
-    {
-        // std::cout << "empty file path" << std::endl;
-        generated_file_path = file_info.file_dir_path;
-    }
-    else
-    {
-        if (generated_file_path.back() != '/')
-            generated_file_path += "/";
-    }
-
+    std::string generated_file_path = file_info.file_dir_path;
     // std::cout << generated_file_path << std::endl;
 
-    // Find generated file name -------------------------
     std::string generated_file_name = file_info.file_name_without_ext + ".generated.hpp";
-
     // std::cout << generated_file_name << std::endl;
 
-    // Create the generated file content -----------------
     std::string generated_content = CreateFileContent(file_info);
-
     // std::cout << generated_content << std::endl;
 
     // Create / Open generated file ----------------------
