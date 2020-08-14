@@ -70,8 +70,15 @@ std::string CreateFileContent(const FileInfo & file_info)
         std::string class_type = (*class_info)->type;
         // std::cout << " Class type: " << class_type << std::endl;
 
-        std::string register_member_tmpl_filled =
-            string_format(RegisterMemberTemplate, class_type.c_str(), members_tmpl_filled.c_str());
+        std::string register_member_tmpl_filled;
+
+        if ((*class_info)->bases_type.size() > 0)
+            register_member_tmpl_filled =
+                string_format(RegisterMemberAndBaseTemplate, class_type.c_str(), (*class_info)->bases_type[0].c_str(),
+                              members_tmpl_filled.c_str());
+        else
+            register_member_tmpl_filled =
+                string_format(RegisterMemberTemplate, class_type.c_str(), members_tmpl_filled.c_str());
 
         // -----------------------------------------------------------------------------
 

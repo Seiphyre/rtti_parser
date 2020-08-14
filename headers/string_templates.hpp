@@ -34,6 +34,20 @@ inline auto registerMembers< %s >()
     );
 })";
 
+// 1: TYPE
+// 2: BASE_TYPE
+// 3: MEMBER_TEMPLATE
+const std::string RegisterMemberAndBaseTemplate =
+    R"(template <>
+inline auto registerMembers< %s >() 
+{
+    return std::tuple_cat(
+        meta::getMembers< %s >(),
+        members(
+%s 
+    ));
+})";
+
 // 1: SHORT_MEMBER_NAME
 // 2: MEMBER_NAME
 const std::string MembersTemplate = R"(member("%s", &%s))";
