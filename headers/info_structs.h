@@ -1,7 +1,7 @@
 #ifndef INFO_STRUCTS_H_
 #define INFO_STRUCTS_H_
 
-#include "clang/Basic/SourceLocation.h" // FileID
+#include "clang/Basic/SourceLocation.h" // FileID, SourceLocation
 
 #include <iostream>
 #include <string>
@@ -16,9 +16,17 @@ struct ClassAttribute
 
 struct ClassInfo
 {
+    clang::SourceLocation end_of_class_loc;
+
     std::string                   type;
     std::vector<ClassAttribute *> attributes;
     std::vector<std::string>      bases_type;
+
+    bool has_friend_register_member_func;
+
+    ClassInfo() : has_friend_register_member_func(false)
+    {
+    }
 };
 
 struct IncludeInfo
@@ -29,12 +37,21 @@ struct IncludeInfo
 
 struct FileInfo
 {
+    clang::SourceLocation end_of_file_loc;
+
+    bool has_include_meta;
+    bool has_include_meta_generated;
+
     std::string file_name_without_ext;
     std::string file_dir_path;
     std::string file_ext;
 
     std::vector<IncludeInfo *> includes;
     std::vector<ClassInfo *>   classes;
+
+    FileInfo() : has_include_meta(false), has_include_meta_generated(false)
+    {
+    }
 
     std::string get_file_name() const
     {

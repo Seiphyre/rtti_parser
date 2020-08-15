@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "metaStuff/Meta.h"
+#include "Gameobject.generated.hpp"
 
 // Internal headers
 // #include "VDEngine/Renderer/Model.h"
@@ -19,6 +20,8 @@ namespace VDEngine
 class GameObject
 {
     friend auto meta::registerMembers<GameObject>();
+    friend auto Transfrom::GetUpDir();
+    friend class Component;
 
   public:
     GameObject();

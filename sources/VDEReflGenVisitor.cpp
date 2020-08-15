@@ -23,10 +23,9 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
         ClassInfo * class_info = new ClassInfo();
 
         class_info->type = decl->getQualifiedNameAsString();
-
-        // std::cout << decl->getQualifier()->getAsType()->isBuiltinType() << std::endl;
-
         // std::cout << " Class type: " << decl->getQualifiedNameAsString() << std::endl;
+        // decl->getTypeForDecl()->string
+        // std::cout << "class qualtype: " << decl->getTypeForDecl()->dump() << std::endl;
 
         const auto bases = decl->bases();
 
@@ -60,6 +59,74 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
             // std::cout << " Attribut " << attribut_name << " of type " << attribut_type << std::endl;
             class_info->attributes.push_back(class_attribute);
         });
+
+        // const auto methods = decl->methods();
+
+        // std::for_each(std::begin(methods), std::end(methods), [&class_info, this](const auto & m) {
+        //     CXXMethodDecl * method = dynamic_cast<CXXMethodDecl *>(m);
+
+        //     method->dump();
+
+        //     // class_info->attributes.push_back(class_attribute);
+        // });
+
+        const auto friends = decl->friends();
+
+        std::for_each(std::begin(friends), std::end(friends), [&class_info, this, &decl](const auto & f) {
+            FriendDecl * _friend = dynamic_cast<FriendDecl *>(f);
+
+            // _friend->dump();
+
+            // // friend class
+            // if (_friend->getFriendType())
+            // {
+            //     PrintingPolicy pp(ast_context->getLangOpts());
+            //     std::cout << _friend->getFriendType()->getType().getAsString(pp) << std::endl;
+
+            //     std::cout << "CLASS DECL" << std::endl;
+            // }
+
+            // friend function
+            if (_friend->getFriendDecl())
+            {
+                // std::cout << _friend->getFriendDecl()->getQualifiedNameAsString() << std::endl;
+
+                // [1] Check if the friend function match the name "meta::registerMembers"
+                bool name_is_matching = _friend->getFriendDecl()->getQualifiedNameAsString() == "meta::registerMembers";
+
+                if (name_is_matching && _friend->getFriendDecl()->getKind() == Decl::Function)
+                {
+                    FunctionDecl * func_decl = (FunctionDecl *)_friend->getFriendDecl();
+
+                    // [2] Check if the friend function has template arguments (looking for a function with 1 arg)
+                    const TemplateArgumentList * tal = func_decl->getTemplateSpecializationArgs();
+                    if (tal != NULL && tal->size() >= 1)
+                    {
+                        // [3] Check the first template argument can be cast as a Type
+                        const TemplateArgument ta = tal->get(0);
+                        if (ta.getKind() == TemplateArgument::ArgKind::Type)
+                        {
+                            QualType func_arg_type = ta.getAsType();
+
+                            // PrintingPolicy pp(ast_context->getLangOpts());
+                            // std::cout << ta.getAsType().getAsString(pp) << std::endl;
+
+                            // [4] Check if the template argument type match this class type
+                            if (ta.getAsType().getTypePtr() == decl->getTypeForDecl())
+                            {
+                                // std::cout << "found: friend auto "
+                                //           << _friend->getFriendDecl()->getQualifiedNameAsString() << "<"
+                                //           << ta.getAsType().getAsString(pp) << ">();" << std::endl;
+                                class_info->has_friend_register_member_func = true;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // decl->getEndLoc().dump(*source_manager);
+        class_info->end_of_class_loc = decl->getEndLoc();
 
         g_data[data_index].classes.push_back(class_info);
         // class_data.push_back(class_info);
