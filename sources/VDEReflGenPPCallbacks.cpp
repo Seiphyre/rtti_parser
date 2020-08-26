@@ -1,6 +1,6 @@
 #include "VDEReflGenPPCallbacks.h"
 
-// cf clang-tidy check (sorting header): https://clang.llvm.org/extra/doxygen/IncludeOrderCheck_8cpp_source.html
+using namespace clang;
 
 MyPPCallbacks::MyPPCallbacks(CompilerInstance * compiler_instance)
 {

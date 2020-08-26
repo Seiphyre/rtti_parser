@@ -1,7 +1,5 @@
 #include "VDEReflGenVisitor.h"
 
-// -------------------------------------
-
 using namespace clang;
 
 MyVisitor::MyVisitor(CompilerInstance * p_compiler_instance, Rewriter * p_rewriter)
@@ -11,6 +9,8 @@ MyVisitor::MyVisitor(CompilerInstance * p_compiler_instance, Rewriter * p_rewrit
 
     rewriter = p_rewriter;
 }
+
+// -------------------------------------
 
 bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 {
@@ -139,6 +139,8 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
     return true;
 }
 
+// -------------------------------------
+
 bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 {
     if (source_manager->isWrittenInMainFile(func_decl->getSourceRange().getBegin()))
@@ -217,16 +219,3 @@ bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 
     return true;
 }
-
-// // this replaces the VisitStmt function above
-// virtual bool VisitReturnStmt(ReturnStmt * ret)
-// {
-//     rewriter.ReplaceText(ret->getBeginLoc(), 6, "val");
-//     errs() << "** Rewrote ReturnStmt\n";
-//     return true;
-// }
-// virtual bool VisitCallExpr(CallExpr * call)
-// {
-//     rewriter.ReplaceText(call->getBeginLoc(), 7, "add5"); // call->getBeginLoc() remplace :
-//     call->getLocStart() ? errs() << "** Rewrote function call\n"; return true;
-// }

@@ -1,5 +1,7 @@
 #include "VDEReflGenASTFrontendAction.h"
 
+using namespace clang;
+
 void MyFrontendAction::WatchMetaHeader(const FileInfo & file_info)
 {
     if (!file_info.has_include_meta)

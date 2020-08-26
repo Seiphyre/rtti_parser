@@ -1,5 +1,7 @@
 #include "VDEReflGenASTConsumer.h"
 
+using namespace clang;
+
 MyASTConsumer::MyASTConsumer(CompilerInstance * CI, Rewriter * R) : ASTConsumer()
 {
     m_visitor  = new MyVisitor(CI, R);
