@@ -17,7 +17,7 @@
 class MyFrontendAction : public clang::ASTFrontendAction
 {
   private:
-    clang::Rewriter *         m_rewriter;
+    clang::Rewriter           m_rewriter;
     clang::CompilerInstance * m_compiler;
 
   public:
@@ -25,6 +25,7 @@ class MyFrontendAction : public clang::ASTFrontendAction
 
     virtual void EndSourceFileAction();
 
+  private:
     void WatchMetaHeader(const FileInfo & file_info);
     void WatchMetaFriendRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info);
     void WatchMetaRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info);

@@ -20,7 +20,7 @@ void MyFrontendAction::WatchMetaHeader(const FileInfo & file_info)
 
         // std::cout << std::endl << meta_include_template_filled << std::endl;
 
-        m_rewriter->InsertText(file_info.start_of_file_loc, include_guard_tmpl_filled);
+        m_rewriter.InsertText(file_info.start_of_file_loc, include_guard_tmpl_filled);
     }
 }
 void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
@@ -31,7 +31,7 @@ void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, c
 
         std::string meta_friend_register_tmpl_filled = string_format(meta_friend_register_tmpl, class_info.type_str);
 
-        m_rewriter->InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
+        m_rewriter.InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
     }
 }
 void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
@@ -83,24 +83,23 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
         std::string result = string_format(include_guard_tmpl, incl_guard_token, incl_guard_token,
                                            register_class_tmpl_filled, incl_guard_token);
 
-        m_rewriter->InsertTextAfterToken(file_info.end_of_file_loc, result);
+        m_rewriter.InsertTextAfterToken(file_info.end_of_file_loc, result);
     }
     else
     {
         std::cout << "I should OVERWRITE meta::registerMembers<>()" << std::endl;
 
-        m_rewriter->ReplaceText((*it)->range_loc, register_class_tmpl_filled);
+        m_rewriter.ReplaceText((*it)->range_loc, register_class_tmpl_filled);
     }
 }
 
 std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstance & CI, StringRef file)
 {
-    m_rewriter = new Rewriter(CI.getSourceManager(), CI.getLangOpts());
-    // m_rewriter->setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
+    m_rewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
     m_compiler = &CI;
 
     // processor callbacks: includes, pragma, ...
-    CI.getPreprocessor().addPPCallbacks(std::make_unique<MyPPCallbacks>(&CI));
+    CI.getPreprocessor().addPPCallbacks(std::make_unique<MyPPCallbacks>(CI));
 
     // add file to data
     g_data[g_data_index] = new FileInfo();
@@ -126,7 +125,7 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
 
     // CI.getSourceManager().getLocForEndOfFile(main_file_id).dump(CI.getSourceManager());
 
-    return std::make_unique<MyASTConsumer>(&CI, m_rewriter); // pass CI pointer to ASTConsumer
+    return std::make_unique<MyASTConsumer>(CI, m_rewriter); // pass CI pointer to ASTConsumer
 }
 
 void MyFrontendAction::EndSourceFileAction()
@@ -148,7 +147,7 @@ void MyFrontendAction::EndSourceFileAction()
 
     // -- Write modifications --
 
-    m_rewriter->overwriteChangedFiles();
+    m_rewriter.overwriteChangedFiles();
 
     // FileID main_file_id = m_compiler->getSourceManager().getMainFileID();
 

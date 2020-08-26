@@ -2,19 +2,19 @@
 
 using namespace clang;
 
-MyVisitor::MyVisitor(CompilerInstance * p_compiler_instance, Rewriter * p_rewriter)
+MyVisitor::MyVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewriter)
 {
-    ast_context    = &(p_compiler_instance->getASTContext());
-    source_manager = &(p_compiler_instance->getSourceManager());
+    m_ast_context    = &(p_compiler_instance.getASTContext());
+    m_source_manager = &(p_compiler_instance.getSourceManager());
 
-    rewriter = p_rewriter;
+    m_rewriter = &p_rewriter;
 }
 
 // -------------------------------------
 
 bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 {
-    if (source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
+    if (m_source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
     {
         // FullSourceLoc full_location = ast_context->getFullLoc(decl->getBeginLoc());
         // FileID file_id = full_location.getFileID();
@@ -33,7 +33,7 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
         std::for_each(std::begin(bases), std::end(bases), [&class_info, this](const auto & b) {
             CXXBaseSpecifier base = (CXXBaseSpecifier)b;
 
-            PrintingPolicy pp(ast_context->getLangOpts());
+            PrintingPolicy pp(m_ast_context->getLangOpts());
             std::string    base_type = base.getType().getAsString(pp);
 
             // std::cout << base.getType().getAsString(pp) << std::endl;
@@ -111,7 +111,7 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
                         {
                             QualType func_arg_type = ta.getAsType();
 
-                            PrintingPolicy pp(ast_context->getLangOpts());
+                            PrintingPolicy pp(m_ast_context->getLangOpts());
                             // std::cout << ta.getAsType().getAsString(pp) << std::endl;
 
                             // [4] Check if the template argument type match this class type
@@ -143,7 +143,7 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 
 bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 {
-    if (source_manager->isWrittenInMainFile(func_decl->getSourceRange().getBegin()))
+    if (m_source_manager->isWrittenInMainFile(func_decl->getSourceRange().getBegin()))
     {
 
         // [1] Check if the function match the name "meta::registerMembers"
@@ -172,7 +172,7 @@ bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
             {
                 QualType func_arg_type = ta.getAsType();
 
-                PrintingPolicy pp(ast_context->getLangOpts());
+                PrintingPolicy pp(m_ast_context->getLangOpts());
                 // std::cout << ta.getAsType().getAsString(pp) << std::endl;
 
                 RegisterMemberFuncInfo * rmf_info = new RegisterMemberFuncInfo();

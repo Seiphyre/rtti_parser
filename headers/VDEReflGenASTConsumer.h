@@ -11,11 +11,11 @@
 class MyASTConsumer : public clang::ASTConsumer
 {
   private:
-    MyVisitor *       m_visitor;
+    MyVisitor         m_visitor;
     clang::Rewriter * m_rewriter;
 
   public:
-    MyASTConsumer(clang::CompilerInstance * compiler_instance, clang::Rewriter * rewriter);
+    MyASTConsumer(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter);
 
     virtual void HandleTranslationUnit(clang::ASTContext & ast_context);
 };

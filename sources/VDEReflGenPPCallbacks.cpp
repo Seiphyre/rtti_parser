@@ -2,9 +2,9 @@
 
 using namespace clang;
 
-MyPPCallbacks::MyPPCallbacks(CompilerInstance * compiler_instance)
+MyPPCallbacks::MyPPCallbacks(CompilerInstance & compiler_instance)
 {
-    m_source_manager = &(compiler_instance->getSourceManager());
+    m_source_manager = &(compiler_instance.getSourceManager());
 }
 
 void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName,

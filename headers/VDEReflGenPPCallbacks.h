@@ -13,7 +13,7 @@ class MyPPCallbacks : public clang::PPCallbacks
     clang::SourceManager * m_source_manager;
 
   public:
-    explicit MyPPCallbacks(clang::CompilerInstance * compiler_instance);
+    MyPPCallbacks(clang::CompilerInstance & compiler_instance);
 
     virtual void InclusionDirective(clang::SourceLocation HashLoc, const clang::Token & IncludeTok,
                                     clang::StringRef FileName, bool IsAngled, clang::CharSourceRange FilenameRange,
