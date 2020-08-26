@@ -19,13 +19,13 @@ void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & Inc
         header_info->name     = FileName.str();
         header_info->isAngled = IsAngled;
 
-        g_data[data_index]->includes.push_back(header_info);
+        g_data[g_data_index]->includes.push_back(header_info);
 
         // -- Check if there is the include Meta.h  --
         std::size_t found = FileName.str().find("Meta.h");
         if (found != std::string::npos)
         {
-            g_data[data_index]->has_include_meta = true;
+            g_data[g_data_index]->has_include_meta = true;
             // std::cout << "#include \"" << FileName.str() << "\"" << std::endl;
         }
 

@@ -4,10 +4,10 @@
 #include "clang/Basic/SourceLocation.h" // FileID, SourceLocation
 #include "clang/AST/Type.h"             // Type
 
-#include <iostream>
 #include <string>
 #include <vector>
 #include <map>
+#include <iostream>
 
 struct ClassAttribute
 {
@@ -23,7 +23,7 @@ struct ClassInfo
     std::vector<std::string>      bases_type;
 
     bool               has_friend_register_member_func;
-    clang::SourceRange class_loc_range;
+    clang::SourceRange class_brace_range;
 
     ClassInfo() : has_friend_register_member_func(false)
     {
@@ -44,7 +44,8 @@ struct RegisterMemberFuncInfo
 
 struct FileInfo
 {
-    bool                  has_include_meta;
+    bool has_include_meta;
+
     clang::SourceLocation end_of_file_loc;
     clang::SourceLocation start_of_file_loc;
 
@@ -116,7 +117,7 @@ struct FileInfo
     }
 };
 
-extern int                       data_index;
+extern int                       g_data_index;
 extern std::map<int, FileInfo *> g_data;
 
 #endif /* INFO_STRUCTS_H_ */

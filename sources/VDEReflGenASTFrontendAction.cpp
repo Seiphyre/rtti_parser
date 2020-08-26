@@ -31,7 +31,7 @@ void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, c
         std::string meta_friend_register_tmpl_filled =
             string_format(meta_friend_register_tmpl, class_info.type_str.c_str());
 
-        m_rewriter->InsertTextAfterToken(class_info.class_loc_range.getBegin(), meta_friend_register_tmpl_filled);
+        m_rewriter->InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
     }
 }
 void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
@@ -105,7 +105,7 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
     CI.getPreprocessor().addPPCallbacks(std::make_unique<MyPPCallbacks>(&CI));
 
     // add file to data
-    g_data[data_index] = new FileInfo();
+    g_data[g_data_index] = new FileInfo();
 
     std::string main_file_name;
     std::string main_file_dir_path;
@@ -113,9 +113,9 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
 
     split_path(file.str(), main_file_dir_path, main_file_name, main_file_ext);
 
-    g_data[data_index]->file_name_without_ext = main_file_name;
-    g_data[data_index]->file_dir_path         = main_file_dir_path;
-    g_data[data_index]->file_ext              = main_file_ext;
+    g_data[g_data_index]->file_name_without_ext = main_file_name;
+    g_data[g_data_index]->file_dir_path         = main_file_dir_path;
+    g_data[g_data_index]->file_ext              = main_file_ext;
 
     // std::cout << "file_id: " << g_data[main_file_id].main_file_id.getHashValue() << std::endl;
     // std::cout << "--- " << g_data[data_index].file_name_without_ext << " ---" << std::endl;
@@ -123,8 +123,8 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
 
     FileID main_file_id = CI.getSourceManager().getMainFileID();
 
-    g_data[data_index]->end_of_file_loc   = CI.getSourceManager().getLocForEndOfFile(main_file_id);
-    g_data[data_index]->start_of_file_loc = CI.getSourceManager().getLocForStartOfFile(main_file_id);
+    g_data[g_data_index]->end_of_file_loc   = CI.getSourceManager().getLocForEndOfFile(main_file_id);
+    g_data[g_data_index]->start_of_file_loc = CI.getSourceManager().getLocForStartOfFile(main_file_id);
 
     // CI.getSourceManager().getLocForEndOfFile(main_file_id).dump(CI.getSourceManager());
 
@@ -135,7 +135,7 @@ void MyFrontendAction::EndSourceFileAction()
 {
     // -- Update --
 
-    FileInfo * file_info = g_data[data_index];
+    FileInfo * file_info = g_data[g_data_index];
     std::cout << "--- " << file_info->get_file_name() << " ---" << std::endl;
 
     WatchMetaHeader(*file_info);
@@ -170,5 +170,5 @@ void MyFrontendAction::EndSourceFileAction()
     // }
 
     // -- update data index --
-    data_index++;
+    g_data_index++;
 }

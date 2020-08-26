@@ -130,9 +130,9 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 
         // decl->getEndLoc().dump(*source_manager);
         // class_info->class_loc_range = decl->getSourceRange();
-        class_info->class_loc_range = decl->getBraceRange();
+        class_info->class_brace_range = decl->getBraceRange();
 
-        g_data[data_index]->classes.push_back(class_info);
+        g_data[g_data_index]->classes.push_back(class_info);
         // class_data.push_back(class_info);
     }
 
@@ -187,7 +187,7 @@ bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 
                 // func_decl->getLocation().dump(*source_manager);
 
-                g_data[data_index]->register_member_funcs.push_back(rmf_info);
+                g_data[g_data_index]->register_member_funcs.push_back(rmf_info);
 
                 // for (int i = 0; i < g_data[data_index].classes.size(); i++)
                 // {

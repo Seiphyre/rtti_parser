@@ -42,7 +42,7 @@
 using namespace clang::tooling;
 using namespace llvm;
 
-int                       data_index = 0;
+int                       g_data_index = 0;
 std::map<int, FileInfo *> g_data;
 // Rewriter rewriter;
 
