@@ -11,6 +11,12 @@
 //      https://stackoverflow.com/questions/56437013/how-to-overwrite-clang-libtooling-version-option-to-display-the-version-of-my-p
 //      https://code.woboq.org/llvm/clang/lib/Tooling/CommonOptionsParser.cpp.html
 //
+// o Read Later
+//      [Hot reload]
+//      https://www.enkisoftware.com/devlogpost-20200202-1-Runtime-Compiled-C++-Dear-ImGui-and-DirectX11-Tutorial
+//      [Use PasrseAST instead libtool]
+//      https://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
+//
 //**********************************************************************************************************//
 
 // C++ Standard Lib
@@ -21,9 +27,11 @@
 // Clang Libtooling Lib
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
+#include "clang/Rewrite/Core/Rewriter.h"
 
 // VDE_reflection_gen headers
 #include "info_structs.h"
+#include "string_templates.hpp"
 
 #include "utils_functions.hpp"
 #include "file_gen_functions.h"
@@ -35,8 +43,8 @@
 using namespace clang::tooling;
 using namespace llvm;
 
-int                     data_index = 0;
-std::map<int, FileInfo> g_data;
+int                       data_index = 0;
+std::map<int, FileInfo *> g_data;
 // Rewriter rewriter;
 
 void setup_tool(ClangTool & tool)
@@ -57,7 +65,7 @@ void setup_tool(ClangTool & tool)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
 
     // disable Diagnotic tool. We don't want clang parse errors in the file.
-    tool.setDiagnosticConsumer(new IgnoringDiagConsumer());
+    // tool.setDiagnosticConsumer(new IgnoringDiagConsumer());
 }
 
 void generate_file(const FileInfo & file_info)
@@ -72,17 +80,20 @@ void generate_file(const FileInfo & file_info)
     // std::cout << generated_content << std::endl;
 
     // Create / Open generated file ----------------------
-    std::ofstream myfile;
+    // std::ofstream myfile;
 
-    myfile.open(generated_file_path + generated_file_name, std::ofstream::out | std::ofstream::trunc);
-    myfile << generated_content;
-    myfile.close();
+    // myfile.open(generated_file_path + generated_file_name, std::ofstream::out | std::ofstream::trunc);
+    // myfile << generated_content;
+    // myfile.close();
 
-    std::cout << "file generated at " << (generated_file_path + generated_file_name) << std::endl;
+    // std::cout << "file generated at " << (generated_file_path + generated_file_name) << std::endl;
 }
 
 int main(int argc, const char ** argv)
 {
+    // to generate random numbers with rand(), later.
+    srand(time(NULL));
+
     // == parse the command-line args passed to the code ==========
 
     CommonOptionsParser opt_parser(argc, argv, cl::GeneralCategory);
@@ -97,13 +108,14 @@ int main(int argc, const char ** argv)
     if (run_result != 0)
         llvm::errs() << "\n";
 
-    // == use data to generate a new file ==========================
-    for (auto file_info = g_data.begin(); file_info != g_data.end(); file_info++)
-    {
-        // file_info->second.dump();
+    // // == use data to generate a new file ==========================
+    // for (auto file_info = g_data.begin(); file_info != g_data.end(); file_info++)
+    // {
+    //     // file_info->second.dump();
 
-        generate_file(file_info->second);
-    }
+    //     // generate_file(file_info->second);
+    //     update_source_file(file_info->second);
+    // }
 
     return run_result;
 }

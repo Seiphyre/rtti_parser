@@ -1,11 +1,12 @@
 #include "VDEReflGenASTConsumer.h"
 
-// // override the constructor in order to pass CI
-// explicit MyASTConsumer(CompilerInstance * CI) : visitor(new MyVisitor(CI)) // initialize the visitor
-// {
-// }
+MyASTConsumer::MyASTConsumer(CompilerInstance * CI, Rewriter * R) : ASTConsumer()
+{
+    m_visitor  = new MyVisitor(CI, R);
+    m_rewriter = R;
+}
 
 void MyASTConsumer::HandleTranslationUnit(ASTContext & ast_context)
 {
-    visitor->TraverseDecl(ast_context.getTranslationUnitDecl());
+    m_visitor->TraverseDecl(ast_context.getTranslationUnitDecl());
 }

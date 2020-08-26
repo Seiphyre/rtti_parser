@@ -1,3 +1,12 @@
+
+
+#ifndef VDENGINE_META_HEADER
+#define VDENGINE_META_HEADER
+
+#include "metaStuff/Meta.h"
+
+#endif /* VDENGINE_META_HEADER */
+
 #ifndef VDENGINE_GAME_OBJECT_H_
 #define VDENGINE_GAME_OBJECT_H_
 
@@ -5,9 +14,6 @@
 #include <vector>
 #include <string>
 #include <iostream>
-
-#include "metaStuff/Meta.h"
-#include "Gameobject.generated.hpp"
 
 // Internal headers
 // #include "VDEngine/Renderer/Model.h"
@@ -19,9 +25,10 @@ namespace VDEngine
 
 class GameObject
 {
-    friend auto meta::registerMembers<GameObject>();
-    friend auto Transfrom::GetUpDir();
+    friend auto meta::registerMembers<VDEngine::GameObject>();
+
     friend class Component;
+    friend Vector3 Transform::GetUpDir() const;
 
   public:
     GameObject();
@@ -95,18 +102,21 @@ class GameObject
 
 } // namespace VDEngine
 
-namespace meta
-{
+#endif /* VDENGINE_GAME_OBJECT_H_ */
 
-template <> inline auto registerMembers<VDEngine::GameObject>()
+#ifndef META_REGISTER_VDENGINE_GAMEOBJECT
+#define META_REGISTER_VDENGINE_GAMEOBJECT
+
+template <>
+inline auto meta::registerMembers< VDEngine::GameObject >() 
 {
-    return members(member("name", &VDEngine::GameObject::name),               //
-                   member("m_parent", &VDEngine::GameObject::m_parent),       //
-                   member("m_transform", &VDEngine::GameObject::m_transform), //
-                   member("m_children", &VDEngine::GameObject::m_children),   //
-                   member("m_components", &VDEngine::GameObject::m_components));
+    return meta::members( 
+meta::member("name", &VDEngine::GameObject::name),
+meta::member("m_parent", &VDEngine::GameObject::m_parent),
+meta::member("m_transform", &VDEngine::GameObject::m_transform),
+meta::member("m_children", &VDEngine::GameObject::m_children),
+meta::member("m_components", &VDEngine::GameObject::m_components) 
+    );
 }
 
-} // namespace meta
-
-#endif /* VDENGINE_GAME_OBJECT_H_ */
+#endif /* META_REGISTER_VDENGINE_GAMEOBJECT */

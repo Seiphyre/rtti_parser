@@ -11,6 +11,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 //#include "clang/Tooling/CommonOptionsParser.h"
 //#include "clang/Tooling/Tooling.h"
+#include "clang/Rewrite/Core/Rewriter.h"
 
 #include "VDEReflGenVisitor.h"
 
@@ -19,13 +20,11 @@ using namespace clang;
 class MyASTConsumer : public ASTConsumer
 {
   private:
-    MyVisitor * visitor; // doesn't have to be private
+    MyVisitor * m_visitor;
+    Rewriter *  m_rewriter;
 
   public:
-    // override the constructor in order to pass CI
-    explicit MyASTConsumer(CompilerInstance * CI) : visitor(new MyVisitor(CI))
-    {
-    }
+    MyASTConsumer(CompilerInstance * compiler_instance, Rewriter * rewriter);
 
     virtual void HandleTranslationUnit(ASTContext & ast_context);
 };

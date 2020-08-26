@@ -24,3 +24,28 @@ void split_path(const std::string & path, std::string & dir_path, std::string & 
         file_name.erase(period_pos);
     }
 }
+
+std::string FormatClassTypeToIncludeGuard(std::string class_type)
+{
+    // class_name format namespace::type
+    std::string              out;
+    std::vector<std::string> type_split;
+    std::string              delimiter = "::";
+
+    size_t      pos = 0;
+    std::string token;
+    while ((pos = class_type.find(delimiter)) != std::string::npos)
+    {
+        token = class_type.substr(0, pos);
+        type_split.push_back(token);
+        class_type.erase(0, pos + delimiter.length());
+
+        out += token + "_";
+    }
+    type_split.push_back(class_type);
+    out += class_type;
+
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::toupper(c); });
+
+    return out;
+}

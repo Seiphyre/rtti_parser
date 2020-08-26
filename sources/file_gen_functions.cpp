@@ -37,6 +37,10 @@ std::string CreateFileContent(const FileInfo & file_info)
     {
         std::string name = file_info.includes[j]->name;
 
+        // avoid self include of the generated file
+        if (name.find(file_info.file_name_without_ext + ".generated") != std::string::npos)
+            continue;
+
         if (file_info.includes[j]->isAngled)
             includes_tmpl_filled += string_format(AngledIncludeTemplate, name.c_str());
         else
@@ -59,7 +63,7 @@ std::string CreateFileContent(const FileInfo & file_info)
             // std::cout << " Attribut " << name << " of type " << type << std::endl;
 
             members_tmpl_filled += "        ";
-            members_tmpl_filled += string_format(MembersTemplate, name.c_str(), type.c_str());
+            members_tmpl_filled += string_format(meta_register_member_tmpl, name.c_str(), type.c_str());
 
             if (j + 1 < (*class_info)->attributes.size())
                 members_tmpl_filled += "\n";
@@ -67,18 +71,18 @@ std::string CreateFileContent(const FileInfo & file_info)
 
         // ----------------------------------------------------------------------------
 
-        std::string class_type = (*class_info)->type;
+        std::string class_type = (*class_info)->type_str;
         // std::cout << " Class type: " << class_type << std::endl;
 
         std::string register_member_tmpl_filled;
 
         if ((*class_info)->bases_type.size() > 0)
             register_member_tmpl_filled =
-                string_format(RegisterMemberAndBaseTemplate, class_type.c_str(), (*class_info)->bases_type[0].c_str(),
-                              members_tmpl_filled.c_str());
+                string_format(meta_register_class_with_base_tmpl, class_type.c_str(),
+                              (*class_info)->bases_type[0].c_str(), members_tmpl_filled.c_str());
         else
             register_member_tmpl_filled =
-                string_format(RegisterMemberTemplate, class_type.c_str(), members_tmpl_filled.c_str());
+                string_format(meta_register_class_tmpl, class_type.c_str(), members_tmpl_filled.c_str());
 
         // -----------------------------------------------------------------------------
 

@@ -2,6 +2,7 @@
 #define INFO_STRUCTS_H_
 
 #include "clang/Basic/SourceLocation.h" // FileID, SourceLocation
+#include "clang/AST/Type.h"             // Type
 
 #include <iostream>
 #include <string>
@@ -16,13 +17,13 @@ struct ClassAttribute
 
 struct ClassInfo
 {
-    clang::SourceLocation end_of_class_loc;
-
-    std::string                   type;
+    std::string                   type_str;
+    const clang::Type *           type;
     std::vector<ClassAttribute *> attributes;
     std::vector<std::string>      bases_type;
 
-    bool has_friend_register_member_func;
+    bool               has_friend_register_member_func;
+    clang::SourceRange class_loc_range;
 
     ClassInfo() : has_friend_register_member_func(false)
     {
@@ -35,21 +36,27 @@ struct IncludeInfo
     bool        isAngled;
 };
 
+struct RegisterMemberFuncInfo
+{
+    const clang::Type * templ_type;
+    clang::SourceRange  range_loc;
+};
+
 struct FileInfo
 {
+    bool                  has_include_meta;
     clang::SourceLocation end_of_file_loc;
-
-    bool has_include_meta;
-    bool has_include_meta_generated;
+    clang::SourceLocation start_of_file_loc;
 
     std::string file_name_without_ext;
     std::string file_dir_path;
     std::string file_ext;
 
-    std::vector<IncludeInfo *> includes;
-    std::vector<ClassInfo *>   classes;
+    std::vector<IncludeInfo *>            includes;
+    std::vector<ClassInfo *>              classes;
+    std::vector<RegisterMemberFuncInfo *> register_member_funcs;
 
-    FileInfo() : has_include_meta(false), has_include_meta_generated(false)
+    FileInfo() : has_include_meta(false)
     {
     }
 
@@ -109,7 +116,7 @@ struct FileInfo
     }
 };
 
-extern int                     data_index;
-extern std::map<int, FileInfo> g_data;
+extern int                       data_index;
+extern std::map<int, FileInfo *> g_data;
 
 #endif /* INFO_STRUCTS_H_ */

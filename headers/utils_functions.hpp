@@ -4,6 +4,7 @@
 #include <iostream>
 // #include <memory>
 #include <string>
+#include <vector>
 
 // --------------------------------------
 // https://stackoverflow.com/questions/2342162/stdstring-formatting-like-sprintf
@@ -25,5 +26,7 @@ template <typename... Args> std::string string_format(const std::string & format
 }
 
 void split_path(const std::string & path, std::string & dir_path, std::string & file_name, std::string & ext);
+
+std::string FormatClassTypeToIncludeGuard(std::string class_type);
 
 #endif /* UTILS_HPP_ */

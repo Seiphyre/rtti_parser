@@ -11,6 +11,7 @@
 #include "clang/Frontend/CompilerInstance.h"
 //#include "clang/Tooling/CommonOptionsParser.h"
 //#include "clang/Tooling/Tooling.h"
+#include "clang/Rewrite/Core/Rewriter.h"
 
 #include "info_structs.h"
 
@@ -21,11 +22,13 @@ class MyVisitor : public RecursiveASTVisitor<MyVisitor>
   private:
     ASTContext *    ast_context;
     SourceManager * source_manager;
+    Rewriter *      rewriter;
 
   public:
-    explicit MyVisitor(CompilerInstance * compiler_instance);
+    MyVisitor(CompilerInstance * compiler_instance, Rewriter * rewriter);
 
-    bool VisitCXXRecordDecl(clang::CXXRecordDecl * decl);
+    bool         VisitCXXRecordDecl(clang::CXXRecordDecl * decl);
+    virtual bool VisitFunctionDecl(FunctionDecl * func);
 };
 
 #endif /* PARSING_FUNCTIONS_H_ */
