@@ -1,5 +1,10 @@
 #include "utils_functions.hpp"
 
+const char * string_format_type_security(const std::string & value)
+{
+    return value.c_str();
+}
+
 void split_path(const std::string & path, std::string & dir_path, std::string & file_name, std::string & file_ext)
 {
     const size_t last_slash_pos = path.find_last_of("\\/");
@@ -25,27 +30,24 @@ void split_path(const std::string & path, std::string & dir_path, std::string & 
     }
 }
 
-std::string FormatClassTypeToIncludeGuard(std::string class_type)
+std::string convert_to_header_guard_format(std::string str_in, const std::string & delimiter)
 {
-    // class_name format namespace::type
-    std::string              out;
-    std::vector<std::string> type_split;
-    std::string              delimiter = "::";
-
+    std::string str_out;
+    std::string sub_str;
     size_t      pos = 0;
-    std::string token;
-    while ((pos = class_type.find(delimiter)) != std::string::npos)
+
+    // Replace all "delimiter" by "_"
+    while ((pos = str_in.find(delimiter)) != std::string::npos)
     {
-        token = class_type.substr(0, pos);
-        type_split.push_back(token);
-        class_type.erase(0, pos + delimiter.length());
+        sub_str = str_in.substr(0, pos);
 
-        out += token + "_";
+        str_out += sub_str + "_";
+        str_in.erase(0, pos + delimiter.length());
     }
-    type_split.push_back(class_type);
-    out += class_type;
+    str_out += str_in;
 
-    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::toupper(c); });
+    // Transform the result into upper case
+    std::transform(str_out.begin(), str_out.end(), str_out.begin(), [](unsigned char c) { return std::toupper(c); });
 
-    return out;
+    return str_out;
 }

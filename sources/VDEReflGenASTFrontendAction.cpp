@@ -11,11 +11,10 @@ void MyFrontendAction::WatchMetaHeader(const FileInfo & file_info)
         std::string incl_guard_token = "VDENGINE_META_HEADER"; //"META_HEADER_" + std::to_string(random) + "_";
         std::string meta_incl_path   = "metaStuff/Meta.h";
 
-        std::string meta_include_tmpl_filled = string_format(meta_header_tmpl, meta_incl_path.c_str());
+        std::string meta_include_tmpl_filled = string_format(meta_header_tmpl, meta_incl_path);
 
-        std::string include_guard_tmpl_filled =
-            string_format(include_guard_tmpl, incl_guard_token.c_str(), incl_guard_token.c_str(),
-                          meta_include_tmpl_filled.c_str(), incl_guard_token.c_str());
+        std::string include_guard_tmpl_filled = string_format(include_guard_tmpl, incl_guard_token, incl_guard_token,
+                                                              meta_include_tmpl_filled, incl_guard_token);
 
         // std::cout << std::endl << meta_include_template_filled << std::endl;
 
@@ -28,8 +27,7 @@ void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, c
     {
         std::cout << "I should write friend meta::registerMembers<>()" << std::endl;
 
-        std::string meta_friend_register_tmpl_filled =
-            string_format(meta_friend_register_tmpl, class_info.type_str.c_str());
+        std::string meta_friend_register_tmpl_filled = string_format(meta_friend_register_tmpl, class_info.type_str);
 
         m_rewriter->InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
     }
@@ -46,7 +44,7 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
         std::string type = class_info.attributes[j]->full_name;
 
         // members_tmpl_filled += "        ";
-        register_members_tmpl_filled += string_format(meta_register_member_tmpl, name.c_str(), type.c_str());
+        register_members_tmpl_filled += string_format(meta_register_member_tmpl, name, type);
 
         if (j + 1 < class_info.attributes.size())
             register_members_tmpl_filled += ",\n";
@@ -59,12 +57,10 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
     std::string class_type = class_info.type_str;
 
     if (class_info.bases_type.size() > 0)
-        register_class_tmpl_filled =
-            string_format(meta_register_class_with_base_tmpl, class_type.c_str(), class_info.bases_type[0].c_str(),
-                          register_members_tmpl_filled.c_str());
+        register_class_tmpl_filled = string_format(meta_register_class_with_base_tmpl, class_type,
+                                                   class_info.bases_type[0], register_members_tmpl_filled);
     else
-        register_class_tmpl_filled =
-            string_format(meta_register_class_tmpl, class_type.c_str(), register_members_tmpl_filled.c_str());
+        register_class_tmpl_filled = string_format(meta_register_class_tmpl, class_type, register_members_tmpl_filled);
 
     // -------------------------------------------------------------------------------
 
@@ -79,11 +75,11 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
 
         // -- Include Guard --------------------------------------------------------------
 
-        std::string class_type_upper = FormatClassTypeToIncludeGuard(class_type);
+        std::string class_type_upper = convert_to_header_guard_format(class_type, "::");
         std::string incl_guard_token = "META_REGISTER_" + class_type_upper;
 
-        std::string result = string_format(include_guard_tmpl, incl_guard_token.c_str(), incl_guard_token.c_str(),
-                                           register_class_tmpl_filled.c_str(), incl_guard_token.c_str());
+        std::string result = string_format(include_guard_tmpl, incl_guard_token, incl_guard_token,
+                                           register_class_tmpl_filled, incl_guard_token);
 
         m_rewriter->InsertTextAfterToken(file_info.end_of_file_loc, result);
     }

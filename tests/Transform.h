@@ -44,7 +44,7 @@ enum Space
 class Transform : public Component
 {
     friend auto meta::registerMembers<VDEngine::Transform>();
-
+    
   public:
     Vector3    position;
     Vector3    scale;
@@ -80,12 +80,17 @@ class Transform : public Component
 #ifndef META_REGISTER_VDENGINE_TRANSFORM
 #define META_REGISTER_VDENGINE_TRANSFORM
 
-template <> inline auto meta::registerMembers<VDEngine::Transform>()
+template <>
+inline auto meta::registerMembers< VDEngine::Transform >() 
 {
-    return std::tuple_cat(meta::getMembers<VDEngine::Component>(),
-                          meta::members(meta::member("position", &VDEngine::Transform::position),
-                                        meta::member("scale", &VDEngine::Transform::scale),
-                                        meta::member("rotation", &VDEngine::Transform::rotation)));
+    return std::tuple_cat(
+        meta::getMembers< VDEngine::Component >(),
+        meta::members(
+meta::member("position", &VDEngine::Transform::position),
+meta::member("scale", &VDEngine::Transform::scale),
+meta::member("rotation", &VDEngine::Transform::rotation) 
+    ));
 }
 
 #endif /* META_REGISTER_VDENGINE_TRANSFORM */
+
