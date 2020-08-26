@@ -34,7 +34,6 @@
 #include "string_templates.hpp"
 
 #include "utils_functions.hpp"
-#include "file_gen_functions.h"
 
 #include "VDEReflGenASTFrontendAction.h"
 
@@ -66,27 +65,6 @@ void setup_tool(ClangTool & tool)
 
     // disable Diagnotic tool. We don't want clang parse errors in the file.
     // tool.setDiagnosticConsumer(new IgnoringDiagConsumer());
-}
-
-void generate_file(const FileInfo & file_info)
-{
-    std::string generated_file_path = file_info.file_dir_path;
-    // std::cout << generated_file_path << std::endl;
-
-    std::string generated_file_name = file_info.file_name_without_ext + ".generated.hpp";
-    // std::cout << generated_file_name << std::endl;
-
-    std::string generated_content = CreateFileContent(file_info);
-    // std::cout << generated_content << std::endl;
-
-    // Create / Open generated file ----------------------
-    // std::ofstream myfile;
-
-    // myfile.open(generated_file_path + generated_file_name, std::ofstream::out | std::ofstream::trunc);
-    // myfile << generated_content;
-    // myfile.close();
-
-    // std::cout << "file generated at " << (generated_file_path + generated_file_name) << std::endl;
 }
 
 int main(int argc, const char ** argv)
