@@ -2,12 +2,14 @@
 
 using namespace clang;
 
-MyVisitor::MyVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewriter)
+MyVisitor::MyVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewriter, FileInfo & file_info)
 {
     m_ast_context    = &(p_compiler_instance.getASTContext());
     m_source_manager = &(p_compiler_instance.getSourceManager());
 
     m_rewriter = &p_rewriter;
+
+    m_file_info = &file_info;
 }
 
 // -------------------------------------
@@ -122,7 +124,7 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 
         // --------------------------------------------------------------------------------
 
-        g_data[g_data_index]->classes.push_back(class_info);
+        m_file_info->classes.push_back(class_info);
     }
 
     return true;
@@ -175,7 +177,7 @@ bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 
                 // func_decl->getLocation().dump(*source_manager);
 
-                g_data[g_data_index]->register_member_funcs.push_back(rmf_info);
+                m_file_info->register_member_funcs.push_back(rmf_info);
             }
         }
     }

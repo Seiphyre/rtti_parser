@@ -2,9 +2,10 @@
 
 using namespace clang;
 
-MyPPCallbacks::MyPPCallbacks(CompilerInstance & compiler_instance)
+MyPPCallbacks::MyPPCallbacks(CompilerInstance & compiler_instance, FileInfo & file_info)
 {
     m_source_manager = &(compiler_instance.getSourceManager());
+    m_file_info      = &file_info;
 }
 
 void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName,
@@ -19,13 +20,13 @@ void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & Inc
         header_info->name     = FileName.str();
         header_info->isAngled = IsAngled;
 
-        g_data[g_data_index]->includes.push_back(header_info);
+        m_file_info->includes.push_back(header_info);
 
         // -- Check if there is the include Meta.h  --
         std::size_t found = FileName.str().find("Meta.h");
         if (found != std::string::npos)
         {
-            g_data[g_data_index]->has_include_meta = true;
+            m_file_info->has_include_meta = true;
             // std::cout << "#include \"" << FileName.str() << "\"" << std::endl;
         }
 

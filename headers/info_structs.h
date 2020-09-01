@@ -118,7 +118,7 @@ struct FileInfo
     }
 };
 
-extern int                       g_data_index;
-extern std::map<int, FileInfo *> g_data;
+// extern int                       g_data_index;
+// extern std::map<int, FileInfo *> g_data;
 
 #endif /* INFO_STRUCTS_H_ */

@@ -8,7 +8,8 @@ void MyFrontendAction::WatchMetaHeader(const FileInfo & file_info)
     {
         // int random = rand() % 100000 + 100000; // range 100 000 to 999 999
 
-        std::cout << "I should write meta.h" << std::endl;
+        if (m_verbose)
+            std::cout << "I should write meta.h" << std::endl;
 
         std::string incl_guard_token = "VDENGINE_META_HEADER"; //"META_HEADER_" + std::to_string(random) + "_";
         std::string meta_incl_path   = "metaStuff/Meta.h";
@@ -28,7 +29,8 @@ void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, c
 {
     if (!class_info.has_friend_register_member_func)
     {
-        std::cout << "I should write friend meta::registerMembers<>()" << std::endl;
+        if (m_verbose)
+            std::cout << "I should write friend meta::registerMembers<>()" << std::endl;
 
         std::string meta_friend_register_tmpl_filled = string_format(meta_friend_register_tmpl, class_info.type_str);
 
@@ -75,7 +77,8 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
 
     if (it == file_info.register_member_funcs.end())
     {
-        std::cout << "I should WRITE meta::registerMembers<>()" << std::endl;
+        if (m_verbose)
+            std::cout << "I should WRITE meta::registerMembers<>()" << std::endl;
 
         // -- Include Guard --------------------------------------------------------------
 
@@ -89,7 +92,8 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
     }
     else
     {
-        std::cout << "I should OVERWRITE meta::registerMembers<>()" << std::endl;
+        if (m_verbose)
+            std::cout << "I should OVERWRITE meta::registerMembers<>()" << std::endl;
 
         m_rewriter.ReplaceText((*it)->range_loc, register_class_tmpl_filled);
     }
@@ -97,7 +101,10 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
 
 bool MyFrontendAction::PrepareToExecuteAction(clang::CompilerInstance & CI)
 {
-    m_diag_consumer = new CountDiagConsumer();
+    // m_current_file_info = new FileInfo();
+    m_verbose = true;
+
+    m_diag_consumer = new CountDiagConsumer(m_current_file_info);
 
     if (!CI.hasDiagnostics())
     {
@@ -136,10 +143,9 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
     m_compiler = &CI;
 
     // processor callbacks: includes, pragma, ...
-    CI.getPreprocessor().addPPCallbacks(std::make_unique<MyPPCallbacks>(CI));
+    CI.getPreprocessor().addPPCallbacks(std::make_unique<MyPPCallbacks>(CI, m_current_file_info));
 
     // add file to data
-    g_data[g_data_index] = new FileInfo();
 
     std::string main_file_name;
     std::string main_file_dir_path;
@@ -147,22 +153,19 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
 
     split_path(file.str(), main_file_dir_path, main_file_name, main_file_ext);
 
-    g_data[g_data_index]->file_name_without_ext = main_file_name;
-    g_data[g_data_index]->file_dir_path         = main_file_dir_path;
-    g_data[g_data_index]->file_ext              = main_file_ext;
-
-    // std::cout << "file_id: " << g_data[main_file_id].main_file_id.getHashValue() << std::endl;
-    // std::cout << "--- " << g_data[data_index].file_name_without_ext << " ---" << std::endl;
-    // std::cout << "file_dir: " << g_data[main_file_id].main_file_dir_path << std::endl;
+    m_current_file_info.file_name_without_ext = main_file_name;
+    m_current_file_info.file_dir_path         = main_file_dir_path;
+    m_current_file_info.file_ext              = main_file_ext;
 
     FileID main_file_id = CI.getSourceManager().getMainFileID();
 
-    g_data[g_data_index]->end_of_file_loc   = CI.getSourceManager().getLocForEndOfFile(main_file_id);
-    g_data[g_data_index]->start_of_file_loc = CI.getSourceManager().getLocForStartOfFile(main_file_id);
+    m_current_file_info.end_of_file_loc   = CI.getSourceManager().getLocForEndOfFile(main_file_id);
+    m_current_file_info.start_of_file_loc = CI.getSourceManager().getLocForStartOfFile(main_file_id);
 
-    // CI.getSourceManager().getLocForEndOfFile(main_file_id).dump(CI.getSourceManager());
+    if (m_verbose)
+        std::cout << "----- " << m_current_file_info.get_file_name() << " -----\n" << std::endl;
 
-    return std::make_unique<MyASTConsumer>(CI, m_rewriter);
+    return std::make_unique<MyASTConsumer>(CI, m_rewriter, m_current_file_info);
 }
 
 void MyFrontendAction::ExecuteAction()
@@ -174,27 +177,24 @@ void MyFrontendAction::EndSourceFileAction()
 {
     // -- Update --
 
-    if (!g_data[g_data_index]->is_valid)
+    if (!m_current_file_info.is_valid)
     {
-        std::cout << "Errors in " << g_data[g_data_index]->get_file_name() << ". This file will be ignored."
-                  << std::endl;
+        if (m_verbose)
+            std::cout << "Errors has been found. This file will be ignored.\n" << std::endl;
         return;
     }
 
-    FileInfo * file_info = g_data[g_data_index];
-    std::cout << "--- " << file_info->get_file_name() << " ---" << std::endl;
-
     // std::cout << "nb errs: " << m_compiler->getDiagnosticClient().getNumErrors() << std::endl;
-    std::cout << std::boolalpha << "is_valid: " << g_data[g_data_index]->is_valid << std::endl;
+    // std::cout << std::boolalpha << "is_valid: " << m_current_file_info->is_valid << std::endl;
 
-    WatchMetaHeader(*file_info);
+    WatchMetaHeader(m_current_file_info);
 
-    for (int i = 0; i < file_info->classes.size(); i++)
+    for (int i = 0; i < m_current_file_info.classes.size(); i++)
     {
-        ClassInfo * class_info = file_info->classes[i];
+        ClassInfo * class_info = m_current_file_info.classes[i];
 
-        WatchMetaFriendRegisterFunc(*file_info, *class_info);
-        WatchMetaRegisterFunc(*file_info, *class_info);
+        WatchMetaFriendRegisterFunc(m_current_file_info, *class_info);
+        WatchMetaRegisterFunc(m_current_file_info, *class_info);
     }
 
     // -- Write modifications --
@@ -218,6 +218,6 @@ void MyFrontendAction::EndSourceFileAction()
     //     out_file.close();
     // }
 
-    // -- update data index --
-    g_data_index++;
+    if (m_verbose)
+        std::cout << std::endl;
 }

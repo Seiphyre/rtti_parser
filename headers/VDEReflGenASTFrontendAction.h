@@ -14,13 +14,18 @@
 #include "CountDiagConsumer.h"
 
 #include <string>
+#include <vector>
 
 class MyFrontendAction : public clang::ASTFrontendAction
 {
   private:
+    bool m_verbose;
+
     clang::Rewriter           m_rewriter;
     CountDiagConsumer *       m_diag_consumer;
     clang::CompilerInstance * m_compiler;
+
+    FileInfo m_current_file_info;
 
   public:
     virtual bool                                BeginInvocation(clang::CompilerInstance & CI);

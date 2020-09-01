@@ -7,47 +7,11 @@
 
 #endif /* VDENGINE_META_HEADER */
 
-
-
-#ifndef VDENGINE_META_HEADER
-#define VDENGINE_META_HEADER
-
-#include "metaStuff/Meta.h"
-
-#endif /* VDENGINE_META_HEADER */
-
-
-
-#ifndef VDENGINE_META_HEADER
-#define VDENGINE_META_HEADER
-
-#include "metaStuff/Meta.h"
-
-#endif /* VDENGINE_META_HEADER */
-
-
-
-#ifndef VDENGINE_META_HEADER
-#define VDENGINE_META_HEADER
-
-#include "metaStuff/Meta.h"
-
-#endif /* VDENGINE_META_HEADER */
-
 #ifndef VDENGINE_TRANSFORM_H_
 #define VDENGINE_TRANSFORM_H_
 
 // C++ Standard libs
 #include <iostream>
-
-// External libs
-// #include <glm/glm.hpp>
-// #include <glm/gtc/quaternion.hpp>
-// #include <glm/gtx/quaternion.hpp>
-// #include <glm/gtc/matrix_transform.hpp>
-// #include <glm/gtx/matrix_decompose.hpp>
-// #include <glm/gtx/euler_angles.hpp>
-// #include <glm/gtc/type_ptr.hpp>
 
 // Internal headers
 #include "VDEngine/Core/GameObject.h"
@@ -71,7 +35,7 @@ enum Space
 class Transform : public Component
 {
     friend auto meta::registerMembers<VDEngine::Transform>();
-    
+
   public:
     Vector3    position;
     Vector3    scale;
@@ -120,4 +84,3 @@ meta::member("rotation", &VDEngine::Transform::rotation)
 }
 
 #endif /* META_REGISTER_VDENGINE_TRANSFORM */
-

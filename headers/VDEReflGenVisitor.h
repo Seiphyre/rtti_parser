@@ -14,8 +14,10 @@ class MyVisitor : public clang::RecursiveASTVisitor<MyVisitor>
     clang::SourceManager * m_source_manager;
     clang::Rewriter *      m_rewriter;
 
+    FileInfo * m_file_info;
+
   public:
-    MyVisitor(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter);
+    MyVisitor(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter, FileInfo & file_info);
 
     virtual bool VisitCXXRecordDecl(clang::CXXRecordDecl * decl);
     virtual bool VisitFunctionDecl(clang::FunctionDecl * func);

@@ -15,8 +15,10 @@ class MyASTConsumer : public clang::ASTConsumer
     MyVisitor         m_visitor;
     clang::Rewriter * m_rewriter;
 
+    FileInfo * m_file_info;
+
   public:
-    MyASTConsumer(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter);
+    MyASTConsumer(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter, FileInfo & file_info);
 
     // This method is called when the ASTs for entire translation unit have been parsed.
     virtual void HandleTranslationUnit(clang::ASTContext & ast_context);

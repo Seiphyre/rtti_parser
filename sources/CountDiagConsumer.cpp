@@ -2,8 +2,25 @@
 
 using namespace clang;
 
+CountDiagConsumer::CountDiagConsumer(FileInfo & file_info)
+    : TextDiagnosticPrinter(llvm::outs(), new DiagnosticOptions())
+{
+    m_verbose   = false;
+    m_file_info = &file_info;
+}
+
 void CountDiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic & Info)
 {
-    // std::cout << "error found" << std::endl;
-    g_data[g_data_index]->is_valid = false;
+    if (m_verbose)
+        TextDiagnosticPrinter::HandleDiagnostic(DiagLevel, Info);
+
+    if (DiagLevel >= DiagnosticsEngine::Error)
+    {
+        std::cout << "Error found.\n";
+        m_file_info->is_valid = false;
+        //++NumErrors;
+    }
+
+    // if (DiagLevel == DiagnosticsEngine::Warning)
+    //     ++NumWarnings;
 }
