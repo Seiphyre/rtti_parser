@@ -44,6 +44,7 @@ struct RegisterMemberFuncInfo
 
 struct FileInfo
 {
+    bool is_valid;
     bool has_include_meta;
 
     clang::SourceLocation end_of_file_loc;
@@ -57,7 +58,7 @@ struct FileInfo
     std::vector<ClassInfo *>              classes;
     std::vector<RegisterMemberFuncInfo *> register_member_funcs;
 
-    FileInfo() : has_include_meta(false)
+    FileInfo() : has_include_meta(false), is_valid(true)
     {
     }
 

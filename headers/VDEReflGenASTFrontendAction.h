@@ -11,6 +11,7 @@
 #include "info_structs.h"
 #include "string_templates.hpp"
 #include "utils_functions.hpp"
+#include "CountDiagConsumer.h"
 
 #include <string>
 
@@ -18,12 +19,15 @@ class MyFrontendAction : public clang::ASTFrontendAction
 {
   private:
     clang::Rewriter           m_rewriter;
+    CountDiagConsumer *       m_diag_consumer;
     clang::CompilerInstance * m_compiler;
 
   public:
+    virtual bool                                BeginInvocation(clang::CompilerInstance & CI);
+    virtual bool                                PrepareToExecuteAction(clang::CompilerInstance & CI);
     virtual std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance & CI, clang::StringRef file);
-
-    virtual void EndSourceFileAction();
+    virtual void                                ExecuteAction();
+    virtual void                                EndSourceFileAction();
 
   private:
     void WatchMetaHeader(const FileInfo & file_info);

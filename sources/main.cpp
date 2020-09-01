@@ -16,6 +16,7 @@
 //      https://www.enkisoftware.com/devlogpost-20200202-1-Runtime-Compiled-C++-Dear-ImGui-and-DirectX11-Tutorial
 //      [Use PasrseAST instead libtool]
 //      https://eli.thegreenplace.net/2012/06/08/basic-source-to-source-transformation-with-clang
+//      https://github.com/loarabia/Clang-tutorial/blob/master/CIrewriter.cpp
 //
 //**********************************************************************************************************//
 
@@ -36,6 +37,7 @@
 #include "utils_functions.hpp"
 
 #include "VDEReflGenASTFrontendAction.h"
+#include "CountDiagConsumer.h"
 
 // -------------------------------------
 
@@ -64,8 +66,77 @@ void setup_tool(ClangTool & tool)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
 
     // disable Diagnotic tool. We don't want clang parse errors in the file.
-    // tool.setDiagnosticConsumer(new IgnoringDiagConsumer());
+    // tool.setDiagnosticConsumer(new CountDiagConsumer());
+    // tool.setDiagnosticConsumer(new clang::IgnoringDiagConsumer());
 }
+
+// clang-format off
+// ------------------------------ [ ClangTool ] --------------------------------
+//                       clang/lib/Tooling/Tooling.cpp
+//
+// -------------------------- [ Compiler Instance ] ----------------------------
+//                  clang/lib/Frontend/CompilerInstance.cpp
+//
+// --------------------------- [ Frontend Action ]------------------------------
+//                   clang/lib/Frontend/FrontendAction.cpp
+//
+// ClangTool::run()
+// |
+// |---- [ Stuff related to "CommandLine" & "Files" ]
+// |
+// |---- ToolInvocation::run()
+//       |
+//       |---- [ Creation of "CompilerInstance" & "CompilerInvocation" & "DiagnosticsEngine"]
+//       |
+//       |---- ToolInvocation::runInvocation()
+//             |
+//             |---- ToolAction::runInvocation() == FrontendActionFactory::runInvocation()
+//                   |
+//                   |---- [ "CompilerInstance::createSourceManager()" & "CompilerInstance::createDiagnostics()"]
+//                   |
+//                   |---- CompilerInstance::ExecuteAction(FrontendActionFactory::create())
+//                         |                                                                                                _
+//                         |---- FrontendAction::PrepareToExecute() ------------------------------------------------------   |
+//                         |                                                                                                 |
+//                         |---- [Stuff related to Compiler::Target & Compiler::FrontendOpts & Compiler::LangOpts]           | F
+//                         |                                                                                                 | R
+//                         |---- FrontendAction::BeginSourceFile()                                                           | O
+//                         |     |                                                                                           | N
+//                         |     |---- FrontendAction::BeginInvocation() -------------------------------------------------   | T
+//                         |     |                                                                                           | E
+//                         |     |---- [ Choice between multilple scenarios ...]                                             | N
+//                         |     |                                                                                           | D
+//                         |     |---- FrontendAction::BeginSourceFileAction() -------------------------------------------   | 
+//                         |     |                                                                                           | A
+//                         |     |---- [CreateASTContext]                                                                    | C
+//                         |     |                                                                                           | T
+//                         |     |     if (! FrontendAction::usesPreprocessorOnly())                                         | I
+//                         |     |---- FrontendAction::CreateWrappedASTConsumer()                                            | O
+//                         |     |     |                                                                                     | N
+//                         |     |     |---- FrontendAction::CreateASTConsumer() ------------------------------------------  |
+//                         |     |                                                                                           |
+//                         |     |---- [Stuff about PreprocessorOpts]                                                        |
+//                         |                                                                                                 |
+//                         |---- FrontendAction::Execute() ----------------------------------------------------------------  |    
+//                         |     |                                                                                           |
+//                         |     |---- FrontendAction::ExecuteAction() // ASTFrontendAction::ExecuteAction()                 |
+//                         |           |                                                                                     |
+//                         |           |---- clang::ParseAST // Parser::ParseTopLevelDecl                                    |
+//                         |                 |                                                                               |
+//                         |                 |     (Parsing en cour ...)                                                     |
+//                         |                 |---- Parser::ParseTopLevelDecl                                                 |
+//                         |                 |     |                                                                         |
+//                         |                 |     |---- PPCallbacks                                                         | 
+//                         |                 |                                                                               |     _
+//                         |                 |---- ASTConsumer::HandleTopLevelDecl()                                         |      |
+//                         |                 |                                                                               |      | AST CONSUMER
+//                         |                 |     (Une fois le Parsing terminé)                                             |      |
+//                         |                 |---- ASTConsumer::HandleTranslationUnit()                                      |     _|
+//                         |                                                                                                 |      
+//                         |---- FrontendAction::EndSourceFile() -------------------------------------------------------     |
+//                               |                                                                                           |
+//                               |---- FrontendAction::EndSourceFileAction()                                                _|
+// clang-format on
 
 int main(int argc, const char ** argv)
 {
@@ -77,14 +148,16 @@ int main(int argc, const char ** argv)
     CommonOptionsParser opt_parser(argc, argv, cl::GeneralCategory);
 
     // == create, setup and run a new Clang Tool instance =========
+
+    // Utility to run a FrontendAction over a set of files.
     ClangTool tool(opt_parser.getCompilations(), opt_parser.getSourcePathList());
 
     setup_tool(tool);
 
     int run_result = tool.run(newFrontendActionFactory<MyFrontendAction>().get());
 
-    if (run_result != 0)
-        llvm::errs() << "\n";
+    // if (run_result != 0)
+    //     llvm::errs() << "\n";
 
     // // == use data to generate a new file ==========================
     // for (auto file_info = g_data.begin(); file_info != g_data.end(); file_info++)

@@ -7,6 +7,7 @@
 #include "clang/Rewrite/Core/Rewriter.h"
 
 #include "VDEReflGenVisitor.h"
+#include "CountDiagConsumer.h"
 
 class MyASTConsumer : public clang::ASTConsumer
 {
@@ -17,7 +18,10 @@ class MyASTConsumer : public clang::ASTConsumer
   public:
     MyASTConsumer(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter);
 
+    // This method is called when the ASTs for entire translation unit have been parsed.
     virtual void HandleTranslationUnit(clang::ASTContext & ast_context);
+
+    virtual bool HandleTopLevelDecl(clang::DeclGroupRef D);
 };
 
 #endif /* VDE_REFL_GEN_AST_CONSUMER_H_ */

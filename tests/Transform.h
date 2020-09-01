@@ -7,6 +7,33 @@
 
 #endif /* VDENGINE_META_HEADER */
 
+
+
+#ifndef VDENGINE_META_HEADER
+#define VDENGINE_META_HEADER
+
+#include "metaStuff/Meta.h"
+
+#endif /* VDENGINE_META_HEADER */
+
+
+
+#ifndef VDENGINE_META_HEADER
+#define VDENGINE_META_HEADER
+
+#include "metaStuff/Meta.h"
+
+#endif /* VDENGINE_META_HEADER */
+
+
+
+#ifndef VDENGINE_META_HEADER
+#define VDENGINE_META_HEADER
+
+#include "metaStuff/Meta.h"
+
+#endif /* VDENGINE_META_HEADER */
+
 #ifndef VDENGINE_TRANSFORM_H_
 #define VDENGINE_TRANSFORM_H_
 

@@ -23,6 +23,7 @@ void MyFrontendAction::WatchMetaHeader(const FileInfo & file_info)
         m_rewriter.InsertText(file_info.start_of_file_loc, include_guard_tmpl_filled);
     }
 }
+
 void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
 {
     if (!class_info.has_friend_register_member_func)
@@ -34,6 +35,7 @@ void MyFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, c
         m_rewriter.InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
     }
 }
+
 void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
 {
     // -- Members -------------------------------------------------------------------
@@ -93,6 +95,41 @@ void MyFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, const C
     }
 }
 
+bool MyFrontendAction::PrepareToExecuteAction(clang::CompilerInstance & CI)
+{
+    m_diag_consumer = new CountDiagConsumer();
+
+    if (!CI.hasDiagnostics())
+    {
+        CI.createDiagnostics(m_diag_consumer);
+        // CI.createDiagnostics(new clang::IgnoringDiagConsumer());
+        std::cout << "[Warning] [MyFrontendAction::PrepareToExecuteAction] new Diagnostics has been created."
+                  << std::endl;
+    }
+    else
+    {
+        CI.getDiagnostics().setClient(m_diag_consumer);
+        // CI.getDiagnostics().setClient(new clang::IgnoringDiagConsumer());
+    }
+
+    // CI.getDiagnostics().setErrorLimit(1);
+
+    // LangOpts setting to enable C++
+    //
+    // langOpts.GNUMode = 1;
+    // langOpts.CXXExceptions = 1;
+    // langOpts.RTTI = 1;
+    // langOpts.Bool = 1;
+    // langOpts.CPlusPlus = 1;
+
+    return true;
+}
+
+bool MyFrontendAction::BeginInvocation(CompilerInstance & CI)
+{
+    return true;
+}
+
 std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstance & CI, StringRef file)
 {
     m_rewriter.setSourceMgr(CI.getSourceManager(), CI.getLangOpts());
@@ -125,15 +162,30 @@ std::unique_ptr<ASTConsumer> MyFrontendAction::CreateASTConsumer(CompilerInstanc
 
     // CI.getSourceManager().getLocForEndOfFile(main_file_id).dump(CI.getSourceManager());
 
-    return std::make_unique<MyASTConsumer>(CI, m_rewriter); // pass CI pointer to ASTConsumer
+    return std::make_unique<MyASTConsumer>(CI, m_rewriter);
+}
+
+void MyFrontendAction::ExecuteAction()
+{
+    ASTFrontendAction::ExecuteAction();
 }
 
 void MyFrontendAction::EndSourceFileAction()
 {
     // -- Update --
 
+    if (!g_data[g_data_index]->is_valid)
+    {
+        std::cout << "Errors in " << g_data[g_data_index]->get_file_name() << ". This file will be ignored."
+                  << std::endl;
+        return;
+    }
+
     FileInfo * file_info = g_data[g_data_index];
     std::cout << "--- " << file_info->get_file_name() << " ---" << std::endl;
+
+    // std::cout << "nb errs: " << m_compiler->getDiagnosticClient().getNumErrors() << std::endl;
+    std::cout << std::boolalpha << "is_valid: " << g_data[g_data_index]->is_valid << std::endl;
 
     WatchMetaHeader(*file_info);
 
