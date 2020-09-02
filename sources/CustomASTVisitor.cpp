@@ -18,6 +18,9 @@ bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 {
     if (m_source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
     {
+        if (!decl->hasBody())
+            return true;
+
         // -- gathering Informations class ---------------------------------------------------
 
         ClassInfo * class_info = new ClassInfo();
