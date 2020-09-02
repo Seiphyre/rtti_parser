@@ -142,7 +142,7 @@ void CustomASTFrontendAction::EndSourceFileAction()
 
 void CustomASTFrontendAction::WatchMetaHeader(const FileInfo & file_info)
 {
-    if (!file_info.has_include_meta)
+    if (!file_info.has_include_meta && file_info.classes.size() > 0)
     {
         if (m_verbose)
             std::cout << "WRITE #include \"meta.h\"" << std::endl;
