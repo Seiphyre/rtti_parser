@@ -44,6 +44,7 @@ void setup_tool(ClangTool & tool)
     std::string clang_path   = "-I./libs/llvm10/lib/clang/10.0.0/include/";
     std::string libcpp_path1 = "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/";
     std::string libcpp_path2 = "-I/Library/Developer/CommandLineTools/usr/include/c++/v1/";
+    std::string opengl_path  = "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/";
 
     // add clang includes path
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(clang_path.c_str(), ArgumentInsertPosition::BEGIN));
@@ -52,6 +53,9 @@ void setup_tool(ClangTool & tool)
     // warning: path order matters. Error might append otherwise (i.e: cmath.h not found)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(libcpp_path1.c_str(), ArgumentInsertPosition::BEGIN));
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(libcpp_path2.c_str(), ArgumentInsertPosition::BEGIN));
+
+    // add opengl includes path
+    tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(opengl_path.c_str(), ArgumentInsertPosition::BEGIN));
 
     // force c++ (So that ".h" files are not considered as C header anymore)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
