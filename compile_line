@@ -1,1 +1,0 @@
-./bin/vde-rtti-parser ../includes/VDEngine/Core/Transform.h -- -x c++ -std=c++14 -I/Library/Developer/CommandLineTools/usr/include/c++/v1/ -I/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/usr/include/ -I./libs/llvm10/lib/clang/10.0.0/include/ -I../includes
