@@ -21,6 +21,12 @@ bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
         if (!decl->isThisDeclarationADefinition())
             return true;
 
+        if (decl->isTemplated())
+        {
+            std::cout << decl->getQualifiedNameAsString() << "is templated. This class will be skiped." << std::endl;
+            return true;
+        }
+
         // -- gathering Informations class ---------------------------------------------------
 
         ClassInfo * class_info = new ClassInfo();
@@ -34,14 +40,29 @@ bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 
         const auto bases = decl->bases();
 
-        std::for_each(std::begin(bases), std::end(bases), [&class_info, this](const auto & b) {
+        bool bases_are_templated = false;
+        std::for_each(std::begin(bases), std::end(bases), [&class_info, &bases_are_templated, this](const auto & b) {
             CXXBaseSpecifier base = (CXXBaseSpecifier)b;
 
             PrintingPolicy pp(m_ast_context->getLangOpts());
             std::string    base_type = base.getType().getAsString(pp);
 
+            if (CXXRecordDecl * d = base.getType()->getAsCXXRecordDecl())
+            {
+                if (d->getDeclKind() == Decl::ClassTemplateSpecialization)
+                {
+                    bases_are_templated = true;
+                    std::cout << class_info->type_str << " inherite from a templated class ("
+                              << d->getQualifiedNameAsString() << "). This class will be skiped." << std::endl;
+                    return;
+                }
+            }
+
             class_info->bases_type.push_back(base_type);
         });
+
+        if (bases_are_templated)
+            return true;
 
         // -- gathering Informations about attributes -----------------------------------------
 
