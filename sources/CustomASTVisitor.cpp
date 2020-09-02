@@ -1,8 +1,8 @@
-#include "VDEReflGenVisitor.h"
+#include "CustomASTVisitor.h"
 
 using namespace clang;
 
-MyVisitor::MyVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewriter, FileInfo & file_info)
+CustomASTVisitor::CustomASTVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewriter, FileInfo & file_info)
 {
     m_ast_context    = &(p_compiler_instance.getASTContext());
     m_source_manager = &(p_compiler_instance.getSourceManager());
@@ -14,7 +14,7 @@ MyVisitor::MyVisitor(CompilerInstance & p_compiler_instance, Rewriter & p_rewrit
 
 // -------------------------------------
 
-bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
+bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 {
     if (m_source_manager->isWrittenInMainFile(decl->getSourceRange().getBegin()))
     {
@@ -132,7 +132,7 @@ bool MyVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
 
 // -------------------------------------
 
-bool MyVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
+bool CustomASTVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
 {
     if (m_source_manager->isWrittenInMainFile(func_decl->getSourceRange().getBegin()))
     {

@@ -1,17 +1,17 @@
-#include "VDEReflGenPPCallbacks.h"
+#include "CustomPPCallbacks.h"
 
 using namespace clang;
 
-MyPPCallbacks::MyPPCallbacks(CompilerInstance & compiler_instance, FileInfo & file_info)
+CustomPPCallbacks::CustomPPCallbacks(CompilerInstance & compiler_instance, FileInfo & file_info)
 {
     m_source_manager = &(compiler_instance.getSourceManager());
     m_file_info      = &file_info;
 }
 
-void MyPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName,
-                                       bool IsAngled, CharSourceRange FilenameRange, const FileEntry * File,
-                                       StringRef SearchPath, StringRef RelativePath, const clang::Module * Imported,
-                                       SrcMgr::CharacteristicKind FileType)
+void CustomPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token & IncludeTok, StringRef FileName,
+                                           bool IsAngled, CharSourceRange FilenameRange, const FileEntry * File,
+                                           StringRef SearchPath, StringRef RelativePath, const clang::Module * Imported,
+                                           SrcMgr::CharacteristicKind FileType)
 {
     if (m_source_manager->getFileID(HashLoc) == m_source_manager->getMainFileID())
     {

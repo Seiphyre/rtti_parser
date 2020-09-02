@@ -3,6 +3,8 @@
 
 #include <string>
 
+// clang-format off
+
 // --------------------------------------------------------------
 
 // 1: INCLUDE_GUARD_NAME
@@ -10,7 +12,7 @@
 // 3: CONTENT
 // 4: INCLUDE_GUARD_NAME
 const std::string include_guard_tmpl =
-    R"(
+R"(
 
 #ifndef %s
 #define %s
@@ -67,5 +69,7 @@ inline auto meta::registerMembers< %s >()
 // 1: SHORT_MEMBER_NAME
 // 2: MEMBER_NAME
 const std::string meta_register_member_tmpl = R"(meta::member("%s", &%s))";
+
+// clang-format on
 
 #endif /* STRING_TEMPLATES_HPP_ */

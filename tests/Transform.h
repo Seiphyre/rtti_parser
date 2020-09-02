@@ -1,12 +1,3 @@
-
-
-#ifndef VDENGINE_META_HEADER
-#define VDENGINE_META_HEADER
-
-#include "metaStuff/Meta.h"
-
-#endif /* VDENGINE_META_HEADER */
-
 #ifndef VDENGINE_TRANSFORM_H_
 #define VDENGINE_TRANSFORM_H_
 
@@ -18,6 +9,8 @@
 #include "VDEngine/Math/Vector3.h"
 #include "VDEngine/Math/Quaternion.h"
 #include "VDEngine/Math/Matrix4.h"
+
+#include "metaStuff/Meta.h"
 
 namespace VDEngine
 {
@@ -66,21 +59,12 @@ class Transform : public Component
 
 } // namespace VDEngine
 
-#endif /* VDENGINE_TRANSFORM_H_ */
-
-#ifndef META_REGISTER_VDENGINE_TRANSFORM
-#define META_REGISTER_VDENGINE_TRANSFORM
-
-template <>
-inline auto meta::registerMembers< VDEngine::Transform >() 
+template <> inline auto meta::registerMembers<VDEngine::Transform>()
 {
-    return std::tuple_cat(
-        meta::getMembers< VDEngine::Component >(),
-        meta::members(
-meta::member("position", &VDEngine::Transform::position),
-meta::member("scale", &VDEngine::Transform::scale),
-meta::member("rotation", &VDEngine::Transform::rotation) 
-    ));
+    return std::tuple_cat(meta::getMembers<VDEngine::Component>(),
+                          meta::members(meta::member("position", &VDEngine::Transform::position),
+                                        meta::member("scale", &VDEngine::Transform::scale),
+                                        meta::member("rotation", &VDEngine::Transform::rotation)));
 }
 
-#endif /* META_REGISTER_VDENGINE_TRANSFORM */
+#endif /* VDENGINE_TRANSFORM_H_ */

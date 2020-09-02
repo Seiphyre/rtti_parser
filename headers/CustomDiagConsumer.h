@@ -1,14 +1,14 @@
-#ifndef VDENGINE_COUNT_DIAG_CONSUMER_H_
-#define VDENGINE_COUNT_DIAG_CONSUMER_H_
+#ifndef CUSTOM_DIAG_CONSUMER_H_
+#define CUSTOM_DIAG_CONSUMER_H_
 
-#include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
+
 #include "info_structs.h"
 
-class CountDiagConsumer : public clang::TextDiagnosticPrinter
+class CustomDiagConsumer : public clang::TextDiagnosticPrinter
 {
   public:
-    CountDiagConsumer(FileInfo & file_info);
+    CustomDiagConsumer(FileInfo & file_info);
 
     virtual void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel, const clang::Diagnostic & Info) override;
 
@@ -17,4 +17,4 @@ class CountDiagConsumer : public clang::TextDiagnosticPrinter
     FileInfo * m_file_info;
 };
 
-#endif /* VDENGINE_COUNT_DIAG_CONSUMER_H_ */
+#endif /* CUSTOM_DIAG_CONSUMER_H_ */

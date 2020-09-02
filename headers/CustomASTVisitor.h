@@ -1,5 +1,5 @@
-#ifndef PARSING_FUNCTIONS_H_
-#define PARSING_FUNCTIONS_H_
+#ifndef CUSTOM_AST_VISITOR_H_
+#define CUSTOM_AST_VISITOR_H_
 
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -7,7 +7,7 @@
 
 #include "info_structs.h"
 
-class MyVisitor : public clang::RecursiveASTVisitor<MyVisitor>
+class CustomASTVisitor : public clang::RecursiveASTVisitor<CustomASTVisitor>
 {
   private:
     clang::ASTContext *    m_ast_context;
@@ -17,10 +17,10 @@ class MyVisitor : public clang::RecursiveASTVisitor<MyVisitor>
     FileInfo * m_file_info;
 
   public:
-    MyVisitor(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter, FileInfo & file_info);
+    CustomASTVisitor(clang::CompilerInstance & compiler_instance, clang::Rewriter & rewriter, FileInfo & file_info);
 
     virtual bool VisitCXXRecordDecl(clang::CXXRecordDecl * decl);
     virtual bool VisitFunctionDecl(clang::FunctionDecl * func);
 };
 
-#endif /* PARSING_FUNCTIONS_H_ */
+#endif /* CUSTOM_AST_VISITOR_H_ */

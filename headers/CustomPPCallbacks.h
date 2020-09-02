@@ -1,5 +1,5 @@
-#ifndef VDE_REFL_GEN_PP_CALLBACKS_H_
-#define VDE_REFL_GEN_PP_CALLBACKS_H_
+#ifndef CUSTOM_PP_CALLBACKS_H_
+#define CUSTOM_PP_CALLBACKS_H_
 
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -8,14 +8,14 @@
 
 // cf clang-tidy check (sorting header): https://clang.llvm.org/extra/doxygen/IncludeOrderCheck_8cpp_source.html
 
-class MyPPCallbacks : public clang::PPCallbacks
+class CustomPPCallbacks : public clang::PPCallbacks
 {
     clang::SourceManager * m_source_manager;
 
     FileInfo * m_file_info;
 
   public:
-    MyPPCallbacks(clang::CompilerInstance & compiler_instance, FileInfo & file_info);
+    CustomPPCallbacks(clang::CompilerInstance & compiler_instance, FileInfo & file_info);
 
     virtual void InclusionDirective(clang::SourceLocation HashLoc, const clang::Token & IncludeTok,
                                     clang::StringRef FileName, bool IsAngled, clang::CharSourceRange FilenameRange,
@@ -24,4 +24,4 @@ class MyPPCallbacks : public clang::PPCallbacks
                                     clang::SrcMgr::CharacteristicKind FileType);
 };
 
-#endif /* VDE_REFL_GEN_PP_CALLBACKS_H_ */
+#endif /* CUSTOM_PP_CALLBACKS_H_ */

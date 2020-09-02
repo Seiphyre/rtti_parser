@@ -1,22 +1,22 @@
-#include "CountDiagConsumer.h"
+#include "CustomDiagConsumer.h"
 
 using namespace clang;
 
-CountDiagConsumer::CountDiagConsumer(FileInfo & file_info)
+CustomDiagConsumer::CustomDiagConsumer(FileInfo & file_info)
     : TextDiagnosticPrinter(llvm::outs(), new DiagnosticOptions())
 {
-    m_verbose   = false;
+    m_verbose   = true;
     m_file_info = &file_info;
 }
 
-void CountDiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic & Info)
+void CustomDiagConsumer::HandleDiagnostic(DiagnosticsEngine::Level DiagLevel, const Diagnostic & Info)
 {
     if (m_verbose)
         TextDiagnosticPrinter::HandleDiagnostic(DiagLevel, Info);
 
     if (DiagLevel >= DiagnosticsEngine::Error)
     {
-        std::cout << "Error found.\n";
+        // std::cout << "Error found.\n";
         m_file_info->is_valid = false;
         //++NumErrors;
     }

@@ -8,7 +8,7 @@
 #	Base
 #####################################################
 
-NAME		=	vde-rtti-parser
+NAME		=	reflection_gen
 
 BIN_DIR		=	./bin/
 SRC_DIR		=	./sources/
