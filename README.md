@@ -4,6 +4,11 @@ C++ headers parser to add reflection to my custom game engine: VDEngine.
 
 This tool is only working on OSX (Tested with Catalina only).
 
+## Dependencies
+
+- clang/llvm libraries. (for now, I included OSX precompiled project into this project)
+- OS compilation settings ? (for now, Header search path relative to OSX are written in the code (path to c++ libs))
+
 ## Usage
 
 reflection_gen \<headers\> -- -I\<optional_include_paths\>
@@ -38,6 +43,7 @@ Other cases:
 - [] Remove the setup function in main. (We could setup compiler instance instead)
 - [] Stop the creation of the AST when an error occured. (to improve speed)
 - [] Windows / Linux support
+- [] Create installation instructions.
 
 Notebook:
 
