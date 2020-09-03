@@ -62,6 +62,9 @@ void setup_tool(ClangTool & tool)
 
     // force c++ (So that ".h" files are not considered as C header anymore)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
+
+    // remove all warnings (we only want to see errors)
+    tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-Wno-everything", ArgumentInsertPosition::BEGIN));
 }
 
 int main(int argc, const char ** argv)
