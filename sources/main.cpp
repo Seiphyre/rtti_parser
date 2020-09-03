@@ -63,6 +63,9 @@ void setup_tool(ClangTool & tool)
     // force c++ (So that ".h" files are not considered as C header anymore)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-xc++", ArgumentInsertPosition::BEGIN));
 
+    // force c++ 17
+    tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++17", ArgumentInsertPosition::BEGIN));
+
     // remove all warnings (we only want to see errors)
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-Wno-everything", ArgumentInsertPosition::BEGIN));
 }
