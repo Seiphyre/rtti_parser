@@ -8,6 +8,7 @@ This tool is only working on OSX (Tested with Catalina only).
 
 - clang/llvm libraries. (for now, I included OSX precompiled project into this project)
 - OS compilation settings ? (for now, Header search path relative to OSX are written in the code (path to c++ libs))
+- Using OSX function to search path to the executable.
 
 ## Usage
 
@@ -16,7 +17,9 @@ reflection_gen \<headers\> -- -I\<optional_include_paths\>
 ## Behavior
 
 The tool will parse individually each header file.
-If the file contains compilation errors, the file is skipped.
+
+If the file contains **compilation errors**, the file is skipped.
+If the a class/struct is **templated or inherite from templated class**, this class is skipped.
 
 Simple cases: (the user doesn't modify generated code)
 
@@ -44,6 +47,9 @@ Other cases:
 - [] Stop the creation of the AST when an error occured. (to improve speed)
 - [] Windows / Linux support
 - [] Create installation instructions.
+- [] Enable template classes parsing (3)
+- [] Do not register members when there are no members
+- [x] Do not write meta.h when there are no classes to register
 
 Notebook:
 
@@ -59,3 +65,9 @@ Notebook:
 - The generated file should be included in the .cpp file. (Including it in the .h/.hpp file won't work because of circular dependency)
 - The generated file should be created in the directory of the original header (.h/hpp). (So that we know the path to the header and we can include the original header)
   - OR We should know all includes directory, so we can easily find the header
+
+(3)
+
+- Create a new template of the function "template<Class> auto meta::registerMembers()" => "template <template<Class> Class> auto meta::registerMembers()"
+  (https://stackoverflow.com/questions/213761/what-are-some-uses-of-template-template-parameters)
+- In derivated class, add specifier to class type name, i.e: VDEngine::)
