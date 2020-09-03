@@ -19,7 +19,8 @@ reflection_gen \<headers\> -- -I\<optional_include_paths\>
 The tool will parse individually each header file.
 
 If the file contains **compilation errors**, the file is skipped.
-If the a class/struct is **templated or inherite from templated class**, this class is skipped.
+If a class/struct is **templated or inherite from templated class**, this class is skipped.
+If a class/struct contains **C-style arrays** member, this member is ignored. (alternative: std::array or typedef, i.e: "typedef int int5[5];")
 
 Simple cases: (the user doesn't modify generated code)
 
@@ -47,9 +48,10 @@ Other cases:
 - [] Stop the creation of the AST when an error occured. (to improve speed)
 - [] Windows / Linux support
 - [] Create installation instructions.
-- [] Enable template classes parsing (3)
+- [] Template classes/structs support (3)
 - [] Do not register members when there are no members
 - [x] Do not write meta.h when there are no classes to register
+- [] C-style array support
 
 Notebook:
 
