@@ -71,7 +71,14 @@ bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
         std::for_each(std::begin(fields), std::end(fields), [&class_info, this](const auto & f) {
             ClassAttribute * class_attribute = new ClassAttribute();
             FieldDecl *      field           = dynamic_cast<FieldDecl *>(f);
-            TypedefType *    typedef_type    = (TypedefType *)f;
+            // TypedefType *    typedef_type    = (TypedefType *)f;
+
+            if (field->getType()->isConstantArrayType())
+            {
+                std::cout << "Array Type \"" << field->getNameAsString() << "\" has been found in "
+                          << class_info->type_str << ". This member will be ignored." << std::endl;
+                return;
+            }
 
             class_attribute->name      = field->getNameAsString();
             class_attribute->full_name = field->getQualifiedNameAsString();
