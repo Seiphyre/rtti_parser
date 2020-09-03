@@ -51,3 +51,39 @@ std::string convert_to_header_guard_format(std::string str_in, const std::string
 
     return str_out;
 }
+
+const std::string find_app_root_path()
+{
+#ifdef __APPLE__
+
+    char     execPath[PATH_MAX];
+    uint32_t size = sizeof(execPath);
+    if (_NSGetExecutablePath(execPath, &size) == 0)
+    {
+        char realExecPath[1024];
+        realpath(execPath, realExecPath);
+
+        std::string realExecPath_str(realExecPath);
+
+        std::size_t found;
+
+        for (int i = 0; i < 2; i++)
+        {
+            found            = realExecPath_str.find_last_of("/");
+            realExecPath_str = realExecPath_str.substr(0, found);
+        }
+        std::string rootPath = realExecPath_str + "/";
+
+        return std::string(rootPath);
+    }
+    else
+        printf("buffer too small; need size %u\n", size);
+
+    return "";
+
+#else
+
+    std::cout << "[FileHandler::GetAppRootPath] No implementation on this architecture." << std::endl;
+    return "";
+#endif
+}

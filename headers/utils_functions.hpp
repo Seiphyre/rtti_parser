@@ -1,6 +1,10 @@
 #ifndef UTILS_HPP_
 #define UTILS_HPP_
 
+#ifdef __APPLE__
+#    include <mach-o/dyld.h> // Mac OS functions ( ex: _NSGetExecutablePath() )
+#endif
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -40,5 +44,9 @@ void split_path(const std::string & path, std::string & dir_path, std::string & 
 // --------------------------------------------------------------------------------
 
 std::string convert_to_header_guard_format(std::string str_in, const std::string & delimiter);
+
+// --------------------------------------------------------------------------------
+
+const std::string find_app_root_path();
 
 #endif /* UTILS_HPP_ */

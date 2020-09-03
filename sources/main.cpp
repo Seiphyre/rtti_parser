@@ -23,6 +23,7 @@
 //**********************************************************************************************************//
 
 // C++ Standard Lib
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -32,6 +33,7 @@
 #include "clang/Tooling/Tooling.h"
 
 // reflection_gen headers
+#include "utils_functions.hpp"
 #include "CustomASTFrontendAction.h"
 
 // -------------------------------------
@@ -41,10 +43,11 @@ using namespace llvm;
 
 void setup_tool(ClangTool & tool)
 {
-    std::string clang_path   = "-I./libs/llvm10/lib/clang/10.0.0/include/";
-    std::string libcpp_path1 = "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/";
-    std::string libcpp_path2 = "-I/Library/Developer/CommandLineTools/usr/include/c++/v1/";
-    std::string opengl_path  = "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/";
+    std::string app_root_path = find_app_root_path();
+    std::string clang_path    = "-I" + app_root_path + "libs/llvm10/lib/clang/10.0.0/include/";
+    std::string libcpp_path1  = "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/";
+    std::string libcpp_path2  = "-I/Library/Developer/CommandLineTools/usr/include/c++/v1/";
+    std::string opengl_path   = "-F/Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/";
 
     // add clang includes path
     tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(clang_path.c_str(), ArgumentInsertPosition::BEGIN));
