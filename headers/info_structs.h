@@ -23,9 +23,10 @@ struct ClassInfo
     std::vector<std::string>      bases_type;
 
     bool               has_friend_register_member_func;
+    bool               has_friend_serialization_func;
     clang::SourceRange class_brace_range;
 
-    ClassInfo() : has_friend_register_member_func(false)
+    ClassInfo() : has_friend_register_member_func(false), has_friend_serialization_func(false)
     {
     }
 };
@@ -42,10 +43,17 @@ struct RegisterMemberFuncInfo
     clang::SourceRange  range_loc;
 };
 
+struct SerializationFuncInfo
+{
+    const clang::Type * param_type;
+    clang::SourceRange  range_loc;
+};
+
 struct FileInfo
 {
     bool is_valid;
     bool has_include_meta;
+    bool has_include_serialization;
 
     clang::SourceLocation end_of_file_loc;
     clang::SourceLocation start_of_file_loc;
@@ -57,8 +65,9 @@ struct FileInfo
     std::vector<IncludeInfo *>            includes;
     std::vector<ClassInfo *>              classes;
     std::vector<RegisterMemberFuncInfo *> register_member_funcs;
+    std::vector<SerializationFuncInfo *>  serialization_funcs;
 
-    FileInfo() : has_include_meta(false), is_valid(true)
+    FileInfo() : has_include_meta(false), has_include_serialization(false), is_valid(true)
     {
     }
 

@@ -144,13 +144,20 @@ bool CustomASTVisitor::VisitCXXRecordDecl(clang::CXXRecordDecl * decl)
             }
 
             // CLASS DECL
-            // if (_friend->getFriendType())
-            // {
-            //     PrintingPolicy pp(ast_context->getLangOpts());
-            //     std::cout << _friend->getFriendType()->getType().getAsString(pp) << std::endl;
+            if (_friend->getFriendType())
+            {
+                // PrintingPolicy pp(m_ast_context->getLangOpts());
+                // std::cout << "CLASS DECL: " << _friend->getFriendType()->getType().getAsString(pp) << std::endl;
 
-            //     std::cout << "CLASS DECL" << std::endl;
-            // }
+                if (CXXRecordDecl * friend_class_decl = _friend->getFriendType()->getType()->getAsCXXRecordDecl())
+                {
+                    if (friend_class_decl->getQualifiedNameAsString() == "boost::serialization::access")
+                    {
+                        // std::cout << friend_class_decl->getQualifiedNameAsString() << std::endl;
+                        class_info->has_friend_serialization_func = true;
+                    }
+                }
+            }
         });
 
         // --------------------------------------------------------------------------------
@@ -169,46 +176,63 @@ bool CustomASTVisitor::VisitFunctionDecl(FunctionDecl * func_decl)
     {
 
         // [1] Check if the function match the name "meta::registerMembers"
-        if (func_decl->getQualifiedNameAsString() != "meta::registerMembers")
-            return true;
-
-        bool is_friend       = func_decl->getFriendObjectKind() != Decl::FriendObjectKind::FOK_None;
-        bool is_class_member = func_decl->isCXXClassMember();
-        // bool is_definition   = func_decl->isThisDeclarationADefinition();
-
-        // [1.5] Check if this function is different from the friend function inside the class
-        if (is_class_member || is_friend)
-            return true;
-
-        const TemplateArgumentList * tal = func_decl->getTemplateSpecializationArgs();
-
-        // [2] Check if the function has template arguments (looking for a function with 1 arg)
-        if (tal != NULL && tal->size() >= 1)
+        if (func_decl->getQualifiedNameAsString() == "meta::registerMembers")
         {
-            // [3] Check the first template argument can be cast as a Type
-            const TemplateArgument ta = tal->get(0);
-            if (ta.getKind() == TemplateArgument::ArgKind::Type)
+            bool is_friend       = func_decl->getFriendObjectKind() != Decl::FriendObjectKind::FOK_None;
+            bool is_class_member = func_decl->isCXXClassMember();
+            // bool is_definition   = func_decl->isThisDeclarationADefinition();
+
+            // [1.5] Check if this function is different from the friend function inside the class
+            if (is_class_member || is_friend)
+                return true;
+
+            const TemplateArgumentList * tal = func_decl->getTemplateSpecializationArgs();
+
+            // [2] Check if the function has template arguments (looking for a function with 1 arg)
+            if (tal != NULL && tal->size() >= 1)
             {
-                QualType func_arg_type = ta.getAsType();
+                // [3] Check the first template argument can be cast as a Type
+                const TemplateArgument ta = tal->get(0);
+                if (ta.getKind() == TemplateArgument::ArgKind::Type)
+                {
+                    QualType func_arg_type = ta.getAsType();
 
-                PrintingPolicy pp(m_ast_context->getLangOpts());
-                // std::cout << ta.getAsType().getAsString(pp) << std::endl;
+                    PrintingPolicy pp(m_ast_context->getLangOpts());
+                    // std::cout << ta.getAsType().getAsString(pp) << std::endl;
 
-                RegisterMemberFuncInfo * rmf_info = new RegisterMemberFuncInfo();
+                    RegisterMemberFuncInfo * rmf_info = new RegisterMemberFuncInfo();
 
-                rmf_info->templ_type = ta.getAsType().getTypePtr();
-                rmf_info->range_loc  = func_decl->getSourceRange();
+                    rmf_info->templ_type = ta.getAsType().getTypePtr();
+                    rmf_info->range_loc  = func_decl->getSourceRange();
 
-                // DeclContext *   namespace_context = func_decl->getDeclContext();
-                // NamespaceDecl * namespace_decl    = NamespaceDecl::castFromDeclContext(namespace_context);
-                // namespace_decl->getSourceRange().dump(*source_manager);
+                    // DeclContext *   namespace_context = func_decl->getDeclContext();
+                    // NamespaceDecl * namespace_decl    = NamespaceDecl::castFromDeclContext(namespace_context);
+                    // namespace_decl->getSourceRange().dump(*source_manager);
 
-                // std::cout << "found: outside of the class: " << func_decl->getQualifiedNameAsString() << "<"
-                //           << ta.getAsType().getAsString(pp) << ">();" << std::endl;
+                    // std::cout << "found: outside of the class: " << func_decl->getQualifiedNameAsString() << "<"
+                    //           << ta.getAsType().getAsString(pp) << ">();" << std::endl;
 
-                // func_decl->getLocation().dump(*source_manager);
+                    // func_decl->getLocation().dump(*source_manager);
 
-                m_file_info->register_member_funcs.push_back(rmf_info);
+                    m_file_info->register_member_funcs.push_back(rmf_info);
+                }
+            }
+        }
+
+        else if (func_decl->getQualifiedNameAsString() == "boost::serialization::serialize")
+        {
+            if (func_decl->getNumParams() == 3)
+            {
+                if (ParmVarDecl * parm_var_decl = func_decl->getParamDecl(1))
+                {
+                    SerializationFuncInfo * sf_info = new SerializationFuncInfo();
+
+                    sf_info->param_type =
+                        parm_var_decl->getType()->getPointeeType().getDesugaredType(*m_ast_context).getTypePtr();
+                    sf_info->range_loc = func_decl->getSourceRange();
+
+                    m_file_info->serialization_funcs.push_back(sf_info);
+                }
             }
         }
     }

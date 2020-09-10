@@ -102,6 +102,10 @@ class CustomASTFrontendAction : public clang::ASTFrontendAction
     void WatchMetaHeader(const FileInfo & file_info);
     void WatchMetaFriendRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info);
     void WatchMetaRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info);
+
+    void WatchSerializationHeader(const FileInfo & file_info);
+    void WatchSerializationFriendClass(const FileInfo & file_info, const ClassInfo & class_info);
+    void WatchSerializationFunc(const FileInfo & file_info, const ClassInfo & class_info);
 };
 
 #endif /* CUSTOM_AST_FRONTEND_ACTION_H_ */

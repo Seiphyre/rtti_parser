@@ -30,6 +30,14 @@ void CustomPPCallbacks::InclusionDirective(SourceLocation HashLoc, const Token &
             // std::cout << "#include \"" << FileName.str() << "\"" << std::endl;
         }
 
+        // -- Check if there is the include Meta.h  --
+        found = FileName.str().find("serialization.hpp");
+        if (found != std::string::npos)
+        {
+            m_file_info->has_include_serialization = true;
+            // std::cout << "#include \"" << FileName.str() << "\"" << std::endl;
+        }
+
         // // -- Check if there is the include of the generated file  --
         // found = FileName.str().find(g_data[data_index].file_name_without_ext + ".generated");
         // if (found != std::string::npos)

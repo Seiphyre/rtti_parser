@@ -106,6 +106,7 @@ void CustomASTFrontendAction::EndSourceFileAction()
     // -- Write modifications --
 
     WatchMetaHeader(m_current_file_info);
+    WatchSerializationHeader(m_current_file_info);
 
     for (int i = 0; i < m_current_file_info.classes.size(); i++)
     {
@@ -113,6 +114,9 @@ void CustomASTFrontendAction::EndSourceFileAction()
 
         WatchMetaFriendRegisterFunc(m_current_file_info, *class_info);
         WatchMetaRegisterFunc(m_current_file_info, *class_info);
+
+        // WatchSerializationFriendClass(m_current_file_info, *class_info);
+        WatchSerializationFunc(m_current_file_info, *class_info);
     }
 
     m_rewriter.overwriteChangedFiles();
@@ -163,6 +167,29 @@ void CustomASTFrontendAction::WatchMetaHeader(const FileInfo & file_info)
 
 // ----------------------------------------------------------------------------------------------
 
+void CustomASTFrontendAction::WatchSerializationHeader(const FileInfo & file_info)
+{
+    if (!file_info.has_include_serialization && file_info.classes.size() > 0)
+    {
+        if (m_verbose)
+            std::cout << "WRITE #include \"serialization.h\"" << std::endl;
+
+        std::string incl_guard_token = "VDENGINE_SEARIALIZATION_HEADER";
+        std::string incl_path        = "boost/serialization/serialization.hpp";
+
+        std::string include_tmpl_filled = string_format(meta_header_tmpl, incl_path);
+
+        std::string include_guard_tmpl_filled = string_format(include_guard_tmpl, incl_guard_token, incl_guard_token,
+                                                              include_tmpl_filled, incl_guard_token);
+
+        // std::cout << std::endl << meta_include_template_filled << std::endl;
+
+        m_rewriter.InsertText(file_info.start_of_file_loc, include_guard_tmpl_filled);
+    }
+}
+
+// ----------------------------------------------------------------------------------------------
+
 void CustomASTFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_info, const ClassInfo & class_info)
 {
     if (!class_info.has_friend_register_member_func)
@@ -173,6 +200,21 @@ void CustomASTFrontendAction::WatchMetaFriendRegisterFunc(const FileInfo & file_
         std::string meta_friend_register_tmpl_filled = string_format(meta_friend_register_tmpl, class_info.type_str);
 
         m_rewriter.InsertTextAfterToken(class_info.class_brace_range.getBegin(), meta_friend_register_tmpl_filled);
+    }
+}
+
+// ----------------------------------------------------------------------------------------------
+
+void CustomASTFrontendAction::WatchSerializationFriendClass(const FileInfo & file_info, const ClassInfo & class_info)
+{
+    if (!class_info.has_friend_serialization_func)
+    {
+        if (m_verbose)
+            std::cout << "WRITE friend function boost::serialization::access" << std::endl;
+
+        std::string serialization_friend_tmpl_filled = "\nfriend boost::serialization::access;\n";
+
+        m_rewriter.InsertTextAfterToken(class_info.class_brace_range.getBegin(), serialization_friend_tmpl_filled);
     }
 }
 
@@ -237,4 +279,63 @@ void CustomASTFrontendAction::WatchMetaRegisterFunc(const FileInfo & file_info, 
 
         m_rewriter.ReplaceText((*it)->range_loc, register_class_tmpl_filled);
     }
+}
+
+void CustomASTFrontendAction::WatchSerializationFunc(const FileInfo & file_info, const ClassInfo & class_info)
+{
+    // -- Members --------------------------------
+
+    // std::string serialize_members_tmpl_filled = "";
+
+    // for (int j = 0; j < class_info.attributes.size(); j++)
+    // {
+    //     std::string type = class_info.attributes[j]->full_name;
+
+    //     // members_tmpl_filled += "        ";
+    //     serialize_members_tmpl_filled += string_format(serialize_member_tmpl, type);
+
+    //     if (j + 1 < class_info.attributes.size())
+    //         serialize_members_tmpl_filled += "\n";
+    // }
+
+    // -- Class -----------------------------------
+
+    std::string class_type = class_info.type_str;
+
+    std::string register_class_tmpl_filled =
+        string_format(serialization_func_tmpl, class_type, class_type /*serialize_members_tmpl_filled*/);
+
+    // ---------------------------------------------
+
+    std::vector<SerializationFuncInfo *>::const_iterator it;
+    it =
+        std::find_if(file_info.serialization_funcs.begin(), file_info.serialization_funcs.end(),
+                     [&class_info](const SerializationFuncInfo * func) { return func->param_type == class_info.type; });
+
+    if (it == file_info.serialization_funcs.end())
+    {
+        if (m_verbose)
+            std::cout << "WRITE serialize(Archive, obj, version)" << std::endl;
+
+        // -- Include Guard -------------------------
+
+        std::string class_type_upper = convert_to_header_guard_format(class_type, "::");
+        std::string incl_guard_token = "SERIALIZATION_" + class_type_upper;
+
+        // Add Function into namespace
+        std::string func_with_namespace = string_format(serialization_namespace_tmpl, register_class_tmpl_filled);
+
+        // Add namespace into include guards
+        std::string result = string_format(include_guard_tmpl, incl_guard_token, incl_guard_token, func_with_namespace,
+                                           incl_guard_token);
+
+        m_rewriter.InsertTextAfterToken(file_info.end_of_file_loc, result);
+    }
+    // else
+    // {
+    //     if (m_verbose)
+    //         std::cout << "OVERWRITE serialize(Archive, obj, version)" << std::endl;
+
+    //     m_rewriter.ReplaceText((*it)->range_loc, register_class_tmpl_filled);
+    // }
 }
